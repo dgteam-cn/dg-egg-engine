@@ -1,0 +1,8 @@
+{
+    "name": "egg-dg-logic",
+    "version": "1.0.0",
+    "eggPlugin": {
+        "name": "logic",
+        "dependencies": ["router"]
+    }
+}

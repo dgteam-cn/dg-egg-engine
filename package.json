@@ -1,0 +1,63 @@
+{
+  "name": "@dgteam/egg-engine",
+  "version": "0.1.0",
+  "description": "",
+  "dependencies": {
+    "@dgteam/helper": "^0.3.0",
+    "@dgteam/validator": "^0.0.5",
+    "axios": "^0.21.1",
+    "egg": "^2",
+    "egg-sequelize": "^6.0.0",
+    "ioredis": "^4.27.3",
+    "mysql2": "^2.2.5",
+    "qiniu": "^7.3.3",
+    "redlock": "^4.2.0"
+  },
+  "devDependencies": {
+    "@dgteam/eslint-config-team": "^0.1.0",
+    "autod": "^3",
+    "autod-egg": "^1",
+    "egg-bin": "^4",
+    "egg-ci": "^1",
+    "egg-mock": "^4",
+    "eslint": "^7"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "scripts": {
+    "test": "npm run lint -- --fix && egg-bin pkgfiles && npm run test-local",
+    "test-local": "egg-bin test",
+    "cov": "egg-bin cov",
+    "lint": "eslint . --resolve-plugins-relative-to .",
+    "ci": "npm run lint && egg-bin pkgfiles --check && npm run cov",
+    "autod": "autod",
+    "pkgfiles": "egg-bin pkgfiles"
+  },
+  "ci": {
+    "version": "12",
+    "type": "github"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "egg",
+    "egg-framework"
+  ],
+  "author": "",
+  "files": [
+    "app",
+    "config",
+    "lib",
+    "app.js",
+    "agent.js",
+    "index.js"
+  ],
+  "eslintIgnore": [
+    "coverage",
+    "dist"
+  ],
+  "license": "MIT"
+}

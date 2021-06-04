@@ -1,0 +1,7 @@
+{
+    "name": "egg-dg-redis",
+    "version": "1.0.0",
+    "eggPlugin": {
+        "name": "redis"
+    }
+}
