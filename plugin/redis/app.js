@@ -113,6 +113,13 @@ module.exports = app => {
             })
         })
     }
+    redis.keys = function(keys, opt={}) {
+        return new Promise(resolve => {
+            this.engine(opt.db).keys(keys, (err, value) => {
+                resolve(value)
+            })
+        })
+    }
     // 获取缓存时间，单位秒
     redis.ttl = function(key, opt={}) {
         return new Promise(resolve => {
@@ -257,9 +264,19 @@ module.exports = app => {
         })
     }
 
-    // 连锁操作
-    redis.pipeline = function(pipeline=[], opt={}) {
-        return this.engine(opt.db).pipeline(pipeline).exec()
+    /**
+     * redis.pipeline
+     * pipeline = [
+     *  ["set", "foo", "bar"],
+     *   ["get", "foo"],
+     * ]
+     */
+    redis.pipeline = function(pipeline = [], opt = {}) {
+        return new Promise(resolve => {
+            return this.engine(opt.db).pipeline(pipeline).exec((err, results) => {
+                resolve(err ? false : results)
+            })
+        })
     }
 
 
