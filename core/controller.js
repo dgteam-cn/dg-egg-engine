@@ -154,6 +154,11 @@ class RESTfullController extends Controller {
             const {query, marker} = ctx.RESTful
             let {order} = ctx.RESTful
             const {page, size} = param
+            if (ctx.RESTful.include) {
+                Array.isArray(ctx.RESTful.include) ?
+                    include.push(...ctx.RESTful.include) :
+                    include.push(ctx.RESTful.include)
+            }
             if (marker) {
                 // marker 中至少包含两个参数：上一列表最后 id 值，排序方式；次要参数：其他排序方式；
                 // 除了 id 以外的其他参数，都要通过 base64 解析后装载在 params 中（覆盖式）

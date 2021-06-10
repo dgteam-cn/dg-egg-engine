@@ -51,6 +51,15 @@ _Validator.rules.RESTful_range = (value, {argName, validValue, ctx}) => {
     return true
 }
 
+// // TODO 需要支持
+// _Validator.rules.RESTful_like = (value, {argName, validValue, ctx}) => {
+//     const key = validValue && typeof validValue === 'string' ? validValue : argName
+//     if (value && ctx.RESTful && ctx.RESTful.query) {
+//         ctx.RESTful.query.push(value)
+//     }
+//     return true
+// }
+
 module.exports = class Validator extends Service {
 
     // 测试自定义数据对象
