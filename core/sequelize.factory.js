@@ -164,10 +164,11 @@ module.exports = class {
 
     static formatPath(str) {
         const {platform} = process
+        // 2021-06-14 修复在 mac 环境下有问题
         if (platform === 'win32') {
             const start = str.indexOf('app\\model') + 10
             return str.slice(start).replace(/.js/, "").split('\\') // windows 平台的路径与 linux 不一样
-        } else if (platform === 'linux') {
+        } else if (~['linux', 'darwin'].indexOf(platform)) {
             const start = str.indexOf('app/model') + 10
             return str.slice(start).replace(/.js/, "").split('/')
         }
