@@ -137,7 +137,6 @@ module.exports = app => {
             console.error('\n', '[egg-dg-router] \n 部分控制器与方法有重名的风险，请检查:', ...router.format.repeats, '\n')
         }
 
-        // TODO 在没有文件夹，即一级控制器情况下，会报错
         // console.log('\n', router.format, '\n')
     })
 }

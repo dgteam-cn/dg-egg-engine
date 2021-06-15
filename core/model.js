@@ -178,7 +178,8 @@ module.exports = class Model {
      * @param {Object}               [opt.include] - 还能继续在 include 其他关系，但是深层对象需要自己提取 sequelize model 对象
      */
     include(opt) {
-        // TODO 2021-06-04 改为支持 Set 格式
+        
+        // 2021-06-04 改为支持 Set 格式
         const options = Array.isArray(opt) || opt instanceof Set ? opt : arguments
         for (let row of options) {
             if (row instanceof Model) {

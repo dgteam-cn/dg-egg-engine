@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "",
   "dependencies": {
+    "@alicloud/pop-core": "^1.7.10",
     "@dgteam/helper": "^0.3.0",
     "@dgteam/validator": "^0.0.5",
     "axios": "^0.21.1",
