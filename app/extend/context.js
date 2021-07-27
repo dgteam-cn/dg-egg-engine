@@ -89,7 +89,7 @@ module.exports = {
         return this.json(result)
     },
 
-    suc(data=null, msg="successful.", status=200) {
+    suc(data = null, msg = "successful.", status = 200) {
         this.status = status
         if (this.type && !~['application/json', 'json'].indexOf(this.type)) {
             this.body = data
@@ -105,12 +105,15 @@ module.exports = {
             }
             // 组装 marker 字段
             if (this.RESTful.method === 'GET' && this.RESTful.marker) {
-                const {size, order} = this.RESTful.marker
+                const {page, size, sort} = this.RESTful.marker
                 if (data.length === 0 || data.length < size) {
                     res.marker = false
                 } else {
-                    res.marker = base64Encode(JSON.stringify({id: data[data.length - 1].id, size, order}))
+                    res.marker = base64Encode(JSON.stringify({id: data[data.length - 1].id, page: page + 1, size}))
                 }
+                res.page = page
+                res.size = size
+                if (sort) res.sort = sort
             }
             return this.json(res)
         } else {

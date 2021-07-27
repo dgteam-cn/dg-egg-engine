@@ -1,8 +1,8 @@
 const {isEmpty, isArray, isObject} = require('@dgteam/helper')
-const {base64Decode} = require('@dgteam/helper/dist/hash')
+// const {base64Decode} = require('@dgteam/helper/dist/hash')
 
 function trimStr(str) {
-    return str.replace(/(^\s*)|(\s*$)/g, "");
+    return str.replace(/(^\s*)|(\s*$)/g, "")
 }
 
 class Items extends Array {
@@ -15,12 +15,16 @@ class Items extends Array {
             if (marker) {
                 this.select = 'marker'
                 this.marker = marker
+                if ((!page || page === 1) && (count || count === 0)) {
+                    this.count = parseInt(count || 0)
+                    this.total = this.count > 0 ? Math.ceil(this.count / size) : 1
+                }
             } else {
                 this.select = 'page'
                 this.page = parseInt(page)
                 this.size = parseInt(size)
                 if (count || count === 0) {
-                    this.count = parseInt(count)
+                    this.count = parseInt(count || 0)
                 }
                 if (total != undefined) {
                     this.total = parseInt(total)
@@ -38,8 +42,11 @@ class Items extends Array {
         const {select, count, total, size, page, marker} = this
         if (this.select == 'page') {
             return {select, count, total, size, page}
-        } else if (this.mode == 'marker') {
-            return {select, marker}
+        } else if (this.select == 'marker') {
+            const obj = {select, marker}
+            if (count || count === 0) obj.count = count
+            if (total || total === 0) obj.total = total
+            return obj
         }
         return {select}
     }
@@ -54,6 +61,15 @@ class Items extends Array {
     }
 }
 
+const removeUndefinedFromObject = function (obj) {
+    Object.keys(obj).forEach(item => {
+        if (obj[item] === undefined) {
+            delete obj[item]
+        }
+    })
+    return obj
+}
+
 module.exports = class Model {
 
     constructor(name, app) {
@@ -63,8 +79,9 @@ module.exports = class Model {
             where: {},
             order: {},
             page: null,
-            field: {},
-            fieldReverse: {},
+            field: new Set(),
+            fieldInclude: new Set(),
+            fieldReverse: new Set(),
             scope: {},
             include: [],
             limit: undefined,
@@ -96,29 +113,29 @@ module.exports = class Model {
     }
 
     // 格式化筛选参数
-    _formatOption(config=this.options) {
-        const {where, include, order, page, limit, offset, field, fieldReverse, paranoid} = config
+    _formatOption(config = this.options) {
+        const {where, include, order, page, limit, offset, field, fieldInclude, fieldReverse, paranoid} = config
         const options = {limit, offset, include, order: [], paranoid}
         if (page) {
             const {current, size} = page
             options.limit = size
             options.offset = (current - 1) * size
         }
-        if (!isEmpty(field) || !isEmpty(fieldReverse)) {
-            options.attributes = {}
-            if (!isEmpty(field)) {
-                options.attributes.include = Object.keys(field)
-            }
-            if (!isEmpty(fieldReverse)) {
-                options.attributes.exclude = Object.keys(fieldReverse)
+        // 2021-07-20: [修复] attributes.include = 全部字段 + 虚拟字段，而非 “包含字段”
+        // 2021-07-20: [优化] field、fieldInclude、fieldReverse 同时支持 StringArray, Array, Set 格式
+        if (field.size > 0 || fieldInclude.size > 0 || fieldReverse.size > 0) {
+            if (field.size > 0) {
+                const attributes = new Set(field)
+                fieldInclude.forEach(item => attributes.add(item)) // 移除不需要的
+                fieldReverse.forEach(item => attributes.delete(item)) // 移除不需要的
+                options.attributes = Array.from(attributes)
+            } else {
+                options.attributes = {
+                    include: Array.from(fieldInclude),
+                    exclude: Array.from(fieldReverse)
+                }
             }
         }
-        // if (!isEmpty(field)) {
-        //     options.attributes = Object.keys(field)
-        // }
-        // if (!isEmpty(fieldReverse)) {
-        //     options.attributes = { exclude: Object.keys(fieldReverse) }
-        // }
         if (order && isObject(order)) {
             for (let key in order) {
                 options.order.push([key, order[key]])
@@ -178,7 +195,7 @@ module.exports = class Model {
      * @param {Object}               [opt.include] - 还能继续在 include 其他关系，但是深层对象需要自己提取 sequelize model 对象
      */
     include(opt) {
-        
+
         // 2021-06-04 改为支持 Set 格式
         const options = Array.isArray(opt) || opt instanceof Set ? opt : arguments
         for (let row of options) {
@@ -198,7 +215,7 @@ module.exports = class Model {
 
     where(opt) {
         if (opt && typeof opt === 'object') {
-            this.options.where = Object.assign(this.options.where, opt)
+            this.options.where = Object.assign(this.options.where, removeUndefinedFromObject(opt)) // 2021-07-18 自动删除对象中 undefined 的字段
         }
         return this
     }
@@ -238,23 +255,22 @@ module.exports = class Model {
     }
     field(opt) {
         if (opt) {
-            if (typeof opt === 'string') {
-                opt = opt.split(/\s*,\s*/)
-            }
-            for (const key of opt) {
-                this.options.field[key] = true
-            }
+            if (typeof opt === 'string') opt = opt.split(/\s*,\s*/)
+            if (typeof opt.forEach === 'function') opt.forEach(item => this.options.field.add(item))
+        }
+        return this
+    }
+    fieldInclude(opt) {
+        if (opt) {
+            if (typeof opt === 'string') opt = opt.split(/\s*,\s*/)
+            if (typeof opt.forEach === 'function') opt.forEach(item => this.options.fieldInclude.add(item))
         }
         return this
     }
     fieldReverse(opt) {
         if (opt) {
-            if (typeof opt === 'string') {
-                opt = opt.split(/\s*,\s*/)
-            }
-            for (const key of opt) {
-                this.options.fieldReverse[key] = true
-            }
+            if (typeof opt === 'string') opt = opt.split(/\s*,\s*/)
+            if (typeof opt.forEach === 'function') opt.forEach(item => this.options.fieldReverse.add(item))
         }
         return this
     }
@@ -292,31 +308,33 @@ module.exports = class Model {
         const {where, attributes, include, limit, offset, order, paranoid} = this._formatOption()
         return this.client.findAll({where, attributes, include, limit, offset, order, paranoid})
     }
-    selectMarker(marker) {
-        if (marker && typeof marker === 'string') {
-            try {
-                this.options.marker = base64Decode(marker)
-            } catch (err) {
-                this.options.marker = ''
-            }
-        } else {
-            this.options.marker = ''
-        }
-        return this.select()
-    }
 
     // 分页查询
-    selectPage(current, size) {
+    async selectPage(current, size) {
         if (current) this.page(current, size)
-        const formatData = this._formatOption()
-        const {where, attributes, include, order, paranoid} = formatData
-        const {limit = 12, offset = 0} = formatData
-        return this.client.findAndCountAll({where, attributes, include, limit, offset, order, paranoid}).then(res => {
-            const {count, rows: items} = res
-            return new Items(items, {count, size: limit, page: Math.ceil(offset / limit) + 1})
-        })
+
+        // const formatData = this._formatOption()
+        // const {where, attributes, include, order, paranoid} = formatData
+        // const {limit = 12, offset = 0} = formatData
+        // return this.client.findAndCountAll({where, attributes, include, limit, offset, order, paranoid}).then(res => {
+        //     const {count, rows: items} = res
+        //     return new Items(items, {count, size: limit, page: Math.ceil(offset / limit) + 1})
+        // })
+
+        // 2021-07-22 由于 include 的结果也会计入 findAndCountAll 中的 count, 因此该接口废弃
+        const {limit, offset} = this._formatOption()
+        const count = await this.count()
+        const items = await this.select()
+        return new Items(items, {count, size: limit, page: Math.ceil(offset / limit) + 1})
     }
 
+    async selectMarker(marker = {}) {
+        const {page = 1, size = 10} = marker
+        this.limit(size)
+        const count = page === 1 ? await this.count() : undefined
+        const items = await this.select()
+        return new Items(items, {count, page, size, marker})
+    }
     /**
      *
      * @param {Object}  [options] 配置对象
@@ -412,8 +430,8 @@ module.exports = class Model {
     }
 
 
-    paranoid(opt=true) {
-        this.options.paranoid = opt
+    paranoid(opt = true) {
+        this.options.paranoid = opt // paranoid: true = 不查询软删除数据; false = 查询软删除数据；
         return this
     }
     startTrans() {}

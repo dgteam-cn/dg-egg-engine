@@ -201,6 +201,22 @@ module.exports = app => {
         })
     }
 
+    // redis.hgetall = function(hash, opt={}) {
+    //     return new Promise((resolve) => {
+    //         this.engine(opt.db).hgetall(hash, (err, value) => {
+    //             if (value) {
+    //                 for (let k in value) {
+    //                     try {
+    //                         value[k] = JSON.parse(value[k])
+    //                     } catch (e) {}
+    //                 }
+    //             }
+    //             if (value === null) resolve(void 0)
+    //             resolve(value)
+    //         })
+    //     })
+    // }
+
     redis.hset = function(hash, key, content, opt={}) {
         content = JSON.stringify(content);
         return new Promise((resolve) => {

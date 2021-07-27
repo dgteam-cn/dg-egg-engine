@@ -100,7 +100,7 @@ const checkPermission = (identity, ctx, logic) => {
         if (examiner.identitys) {
             let identitys = examiner.identitys
             if (typeof identitys === 'string') {
-                identitys = identitys.split(',')
+                identitys = identitys.split(/\s*,\s*/) // 2021-07-18 兼容 ‘center, admin, default’ 的写法
             } else if (typeof identitys === 'function') {
                 identitys = identitys()
             }
@@ -153,17 +153,27 @@ module.exports = options => {
         }
         // 处理 marker 数据
         const _marker = ctx.param('marker')
-        if (method === 'GET' && _marker) {
+        if (method === 'GET' && (_marker || _marker === '' && ctx.param('page') == 1)) {
             const formatMarker = () => {
+                // TODO marker 查询方法一定需要指定排序方式，id 正序或倒叙, 创建时间正序或者倒序 | 优先以创建时间为准
                 const defaultData = {id: 0, page: 1}
-                if (typeof _marker !== 'string') return defaultData // ctx.err(422, undefined, {marker: 'is illegal.'})
+                if (typeof _marker !== 'string') return defaultData // 如果 marker 值属于非法值，均不报错，而是使用默认值覆盖
                 try {
-                    let {id, size, order} = JSON.parse(base64Decode(_marker))
-                    if (!Number.isInteger(id) || id < 0 || id > 1000000000000) id = 0
-                    if (!Number.isInteger(size)) size = undefined
+                    let {id, page = 1, order, size} = JSON.parse(base64Decode(_marker))
+                    if (!Number.isInteger(id) || id < 0 || id > 1000000000000 || !Number.isInteger(page) || page < 0 || page > 1000000000000) {
+                        id = 0 // 主键兼容性判断
+                        page = 1
+                    }
+                    if (!Number.isInteger(size)) size = undefined // size 字段会在 controller 中填充
                     if (ctx.param('size')) size = ctx.param('size') // 优先覆盖外层的 size
-                    if (typeof order !== 'string') order = undefined
-                    return {id, page: 1, size, order}
+                    if (typeof order === 'object') {
+                        for (const key in order) {
+                            if (!~['id', 'page', 'size'].indexOf(key) && typeof order[key] === 'string') {
+                                ctx.param(key, order[key]) // 覆盖排序规则，下一步会进行验证字段
+                            }
+                        }
+                    }
+                    return {id, page, size, order}
                 } catch (err) {
                     // console.error(err)
                     return defaultData
@@ -172,7 +182,7 @@ module.exports = options => {
             ctx.RESTful.marker = formatMarker()
             if (ctx.RESTful.marker.page) ctx.param('page', ctx.RESTful.marker.page)
             if (ctx.RESTful.marker.size) ctx.param('size', ctx.RESTful.marker.size)
-            if (ctx.RESTful.marker.order) ctx.param('order', ctx.RESTful.marker.order)
+            // if (ctx.RESTful.marker.order) ctx.param('order', ctx.RESTful.marker.order)
         }
 
         // 权限基础判断，若未指定身份，则根据实际情况去选择身份

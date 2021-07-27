@@ -78,6 +78,7 @@ module.exports = class {
             paranoid: true, // 删除时启用非物理删除，对应 deletedAt 字段
             // freezeTableName: true, // 表名默认为模型名称
             comment: '',
+            charset: 'utf8mb4', // 默认字符集
             tableName, // 指定表名
             modelName // 指定模型名
         }, options)

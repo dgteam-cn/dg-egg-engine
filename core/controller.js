@@ -121,7 +121,7 @@ class RESTfullController extends Controller {
     }
 
 
-    GET = async (param=this.ctx.RESTful.param) => {
+    GET = async (param = this.ctx.RESTful.param) => {
 
         const {ctx} = this
 
@@ -132,18 +132,21 @@ class RESTfullController extends Controller {
             limit = {...limit, ...this.ctx.RESTful.limit}
         }
 
-        const getGEToptions = key => {
+        // field、fieldInclude、fieldReverse、include 四项特殊的 limit 参数专属于 GET 方法，使用内部 getGEToptions 方法获取
+        const getGEToptions = async key => {
             const type = index ? 'item' : 'list'
             const options = this.opt.GET
-            return options[type] && options[type][key] ? options[type][key] : options[key]
+            const valid = options[type] && options[type][key] ? options[type][key] : options[key]
+            return typeof valid === 'function' ? await valid(ctx.RESTful, ctx) : valid // 2021-07-20 [新增] 支持回掉函数
         }
-        const field = getGEToptions('field')
-        const fieldReverse = getGEToptions('fieldReverse') || ['deleted_at']
-        const include = getGEToptions('include') || []
+        const field = await getGEToptions('field')
+        const fieldInclude = await getGEToptions('fieldInclude') || [] // 2021-07-20 [新增] 增加 fieldInclude 字段，此用于增加虚拟函数所产生的字段
+        const fieldReverse = await getGEToptions('fieldReverse') || [] // 2021-07-20 [修复]  ['deleted_at'] => [] 默认就已经剔除了软删除数据，无需额外排除此字段
+        const include = await getGEToptions('include') || []
 
         const model = this.table(this.options.model)
         if (index) {
-            const item = await model.where(Object.assign({}, limit, index)).field(field).fieldReverse(fieldReverse).include(include).find()
+            const item = await model.where(Object.assign({}, limit, index)).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include).find()
             if (ctx.isEmpty(item)) {
                 ctx.err(404)
             } else {
@@ -154,31 +157,47 @@ class RESTfullController extends Controller {
             const {query, marker} = ctx.RESTful
             let {order} = ctx.RESTful
             const {page, size} = param
+            // TODO 此处仅在 list 中生效，item 不生效
             if (ctx.RESTful.include) {
                 Array.isArray(ctx.RESTful.include) ?
                     include.push(...ctx.RESTful.include) :
                     include.push(ctx.RESTful.include)
             }
+            /**
+             * marker 方式
+             * 在 plugin/middleware/logic.js 中会对 marker 进行解析，如果解析成功，可以从 ctx.RESTful.marker 中获取
+             * 在 core/controller.js 中（也就是此处）判断是否有 marker 参数，优先使用 marker 去加载列表
+             * 在 extend/context.js 的 suc 方法会判断当前请求是否是属于 marker 类型
+             * TODO mark 字段到时候整理到 validator 中，并添加排序关键字
+             * ASC = 正序,小前大后; DESC = 倒序,大前小后;
+             */
             if (marker) {
                 // marker 中至少包含两个参数：上一列表最后 id 值，排序方式；次要参数：其他排序方式；
                 // 除了 id 以外的其他参数，都要通过 base64 解析后装载在 params 中（覆盖式）
                 if (!marker.size) marker.size = size
-                if (!order || order.length === 0) order = ['id ASC']
-                if (!marker.order) marker.order = order.join(',')
+                // if (!order || order.length === 0) order = ['id ASC']
+                // if (!marker.order) marker.order = order.join(',')
                 if (order && ~order.indexOf('id DESC')) {
                     if (marker.id) {
                         query['id'] = ['<', marker.id]
                     }
+                    marker.sort = 'DESC'
                 } else {
                     query['id'] = ['>', marker.id]
+                    marker.sort = 'ASC'
                 }
             }
-            const list = await model.where(Object.assign({}, query, limit)).order(order).field(field).fieldReverse(fieldReverse).include(include).selectPage(page, size)
+
+            // TODO 2021-07-22 marker 查询可以省略一次 count 检索提升效率
+            const modelHandler = model.where(Object.assign({}, query, limit)).order(order).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include)
+            const list = marker ?
+                await modelHandler.selectMarker(marker) :
+                await modelHandler.selectPage(page, size)
             ctx.suc(list)
         }
     }
 
-    POST = async (param=this.ctx.RESTful.param) => {
+    POST = async (param = this.ctx.RESTful.param) => {
         const {ctx} = this
         const limit = await this.RESTfulLimit('POST')
         const data = Object.assign({}, param, limit)
@@ -191,7 +210,7 @@ class RESTfullController extends Controller {
         // }
     }
 
-    PUT = async (param=this.ctx.RESTful.param, index=this.RESTfulIndex('PUT', true)) => {
+    PUT = async (param = this.ctx.RESTful.param, index = this.RESTfulIndex('PUT', true)) => {
         const {ctx} = this
         const limit = await this.RESTfulLimit('PUT')
         if (index) {
@@ -211,15 +230,10 @@ class RESTfullController extends Controller {
         const {ctx} = this
         const index = this.RESTfulIndex('DELETE', true)
         const limit = await this.RESTfulLimit('DELETE')
-        const force = Boolean(this.opt.DELETE && this.opt.DELETE.force)
+        const force = Boolean(this.opt.DELETE && this.opt.DELETE.force) // 是否为物理删除
         if (index) {
             const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).delete({force})
             result ? ctx.suc(index) : ctx.err(404)
-            // if (result) {
-            //     ctx.suc(index)
-            // } else {
-            //     ctx.err(404)
-            // }
         }
     }
 
