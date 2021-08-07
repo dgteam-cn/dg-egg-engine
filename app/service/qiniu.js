@@ -95,9 +95,9 @@ module.exports = class AuthorizationService extends Service {
                     throw respErr;
                 }
                 if (respInfo.statusCode == 200) {
-                    resolve({err: 0, data: respBody})
+                    resolve({err: 0, result: respBody})
                 } else {
-                    resolve({err: respInfo.statusCode, data: respBody})
+                    resolve({err: respInfo.statusCode, result: respBody})
                 }
             })
         })
@@ -108,7 +108,7 @@ module.exports = class AuthorizationService extends Service {
             let key = path + name
             bucketManager.fetch(url, bucket, key, (err, respBody, respInfo) => {
                 if (!err && respInfo.statusCode == 200) {
-                    resolve({err: 0, data: respBody})
+                    resolve({err: 0, result: respBody})
                 } else {
                     resolve({err: 500})
                 }
@@ -124,13 +124,31 @@ module.exports = class AuthorizationService extends Service {
         const bucketManager = new qiniu.rs.BucketManager(this.mac, this.config)
         return bucketManager.privateDownloadUrl(host, path, deadline)
     }
-    privateTokenBodyFormat(body, keys = []) {
+
+    /**
+     * 为字段（私有图片地址）添加访问令牌
+     * @param {object} body - 需要授权的返回题
+     * @param {Array<String>} keys - 需要授权的字段
+     * @param {boolean | string} options.thumb = 是否需要缩略图
+     * @returns
+     */
+    privateTokenBodyFormat(body, keys = [], {thumb = false} = {}) {
+        const thumbMaps = {
+            'mini': 'w/128/h/128/q/75',
+            'small': 'w/256/h/256/q/75',
+            'normal': 'w/512/h/512/q/75',
+            'big': 'w/768/h/768/q/75',
+            'huge': 'w/1024/h/1024/q/75'
+        }
         if (typeof keys === 'string') keys = [keys]
         if (keys.length === 0) return body
         const imagePreview = obj => {
             const row = obj.toJSON ? obj.toJSON() : Object.assign({}, obj)
             keys.forEach(key => {
                 row[`_${key}`] = row[key] ? Array.from(row[key].split(','), item => this.privateToken(item)).join(',') : ''
+                if (typeof thumb === 'string' && thumbMaps[thumb]) {
+                    row[`_${key}_thumb`] = row[key] ? Array.from(row[key].split(','), item => this.privateToken(`${item}?imageView2/2/${thumbMaps[thumb]}`)).join(',') : ''
+                }
             })
             return row
         }
@@ -138,16 +156,16 @@ module.exports = class AuthorizationService extends Service {
     }
 
     info(bucket, key) {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             this.BucketManager.stat(bucket, key, (err, res) => {
                 if (!err) {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, data: res})
+                        resolve({err: 0, msg: 'suc', result: res})
                     }
                 } else {
-                    resolve({err: 500, data: err.message})
+                    resolve({err: 500, result: err.message})
                 }
             })
         })
@@ -155,7 +173,7 @@ module.exports = class AuthorizationService extends Service {
     imageinfo(key, type='public') {
         return new Promise(resolve => {
             if (!key) {
-                resolve({err: 403, msg: 'key error.', data: null})
+                resolve({err: 403, msg: 'key error.', result: null})
             } else {
                 key = key + '?imageInfo'
             }
@@ -169,9 +187,9 @@ module.exports = class AuthorizationService extends Service {
             }
             axios.get({url, json: true}, ( err, response, body ) => {
                 if (body && body.size) {
-                    resolve({err: 0, data: body})
+                    resolve({err: 0, msg: 'suc', result: body})
                 } else {
-                    resolve({err: 403, msg: 'key error.', data: null})
+                    resolve({err: 403, msg: 'key error.', result: null})
                 }
             })
         })
@@ -181,8 +199,8 @@ module.exports = class AuthorizationService extends Service {
         return new Promise(resolve => {
             this.BucketManager.listPrefix(bucket, {limit, prefix, marker, delimiter}, (err, res, info) => {
                 if (!err) {
-                    let {items: data, commonPrefixes: folders, marker} = res
-                    resolve({err: 0, data, folders, marker})
+                    let {items: result, commonPrefixes: folders, marker} = res
+                    resolve({err: 0, result, folders, marker})
                 } else {
                     resolve({err: 502, msg: err.message})
                 }
@@ -197,7 +215,7 @@ module.exports = class AuthorizationService extends Service {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, data: res})
+                        resolve({err: 0, msg: 'suc', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
@@ -213,7 +231,7 @@ module.exports = class AuthorizationService extends Service {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, data: res})
+                        resolve({err: 0, msg: 'suc', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
@@ -229,7 +247,7 @@ module.exports = class AuthorizationService extends Service {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, data: res})
+                        resolve({err: 0, msg: 'suc', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
@@ -245,7 +263,7 @@ module.exports = class AuthorizationService extends Service {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, data: res})
+                        resolve({err: 0, msg: 'suc', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
@@ -276,9 +294,9 @@ module.exports = class AuthorizationService extends Service {
             }
             this.BucketManager.batch(queue, (err, res) => {
                 if (!err) {
-                    resolve({err: 0, data: res})
+                    resolve({err: 0, msg: 'suc', result: res})
                 } else {
-                    resolve({err: 500, data: err.message})
+                    resolve({err: 500, result: err.message})
                 }
             })
         })
@@ -308,17 +326,15 @@ module.exports = class AuthorizationService extends Service {
             }
             return new Promise(resolve => {
                 axios({method, url, headers: this.headersAuth(url), data: {}, json: true}).then(res => {
-                    // Fn.log(res.status,res.data)
                     if (res.status === 200 && res.data) {
-                        // let {result, id} = res.data
-                        resolve({err: 0, msg: '请求成功', data: res.data})
+                        resolve({err: 0, msg: '请求成功', result: res.data})
                     } else {
-                        resolve({err: 500, msg: '网络链接失败', data: null})
+                        resolve({err: 500, msg: '网络链接失败', result: null})
                     }
-                }, err => resolve(Fn.Err(502)))
+                }, err => resolve({err: 504}))
             })
         } else {
-            return Promise.resolve(Fn.Err(404))
+            return Promise.resolve({err: 404})
         }
     }
 }

@@ -1,11 +1,12 @@
 {
   "name": "@dgteam/egg-engine",
   "version": "0.1.2",
+  "author": "2681137811 <donguayx@qq.com>",
   "description": "",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
     "@dgteam/helper": "^0.3.0",
-    "@dgteam/validator": "^0.0.5",
+    "@dgteam/validator": "^0.0.6",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",
     "egg": "^2",
@@ -29,6 +30,7 @@
     "node": ">=12.0.0"
   },
   "scripts": {
+    "push": "npm publish --access public",
     "test": "npm run lint -- --fix && egg-bin pkgfiles && npm run test-local",
     "test-local": "egg-bin test",
     "cov": "egg-bin cov",
@@ -49,7 +51,6 @@
     "egg",
     "egg-framework"
   ],
-  "author": "",
   "files": [
     "app",
     "config",

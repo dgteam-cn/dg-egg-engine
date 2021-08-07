@@ -71,7 +71,7 @@ module.exports = class AliyunService extends Service {
         if (typeof PhoneNumbers === 'number') PhoneNumbers = [PhoneNumbers]
         if (typeof PhoneNumbers === 'string') PhoneNumbers = PhoneNumbers.replace(/\s/g, "").split(',')
         if (PhoneNumbers.length > 100) {
-            return Promise.resolve({err: 500, msg: '单次批量发送最多 100 条短信', data: false})
+            return Promise.resolve({err: 500, msg: '单次批量发送最多 100 条短信'})
         }
         if (typeof SignName === 'string') SignName = new Array(PhoneNumbers.length).fill(SignName.replace(/\s/g, ""), 0, PhoneNumbers.length)
 
@@ -86,12 +86,12 @@ module.exports = class AliyunService extends Service {
             Client.request('SendBatchSms', {PhoneNumberJson: JSON.stringify(PhoneNumbers), SignNameJson: JSON.stringify(SignName), TemplateCode, TemplateParamJson}, {method: 'POST'}).then(res => {
                 const {Code, Message} = res
                 if (Code === 'OK') {
-                    resolve({err: 0, msg: '发送成功', data: true})
+                    resolve({err: 0, msg: '发送成功', result: true})
                 } else {
-                    resolve({err: 500, msg: Message, data: false})
+                    resolve({err: 500, msg: Message, result: null})
                 }
             }, err => {
-                resolve({err: 500, msg: '发送失败', data: false})
+                resolve({err: 500, msg: '发送失败', result: null})
             })
         })
     }
@@ -131,7 +131,7 @@ module.exports = class AliyunService extends Service {
     //             resolve({
     //                 err: response.statusCode==200 ? 0 : response.statusCode,
     //                 msg: response.statusCode==200 ? '请求成功' : body.Message,
-    //                 data: body
+    //                 result: body
     //             })
     //         })
     //     })

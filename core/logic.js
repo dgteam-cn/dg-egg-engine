@@ -2,11 +2,25 @@ const helper = require('@dgteam/helper')
 // const user = require('../logic/account/user')
 // const { app } = require('egg-mock')
 
+const MySQLVariableRange = {
+    integer: {
+        'TINYINT': {min: -128, max: 127, unsigned: 255},
+        'SMALLINT': {min: -32768, max: 32767, unsigned: 65535},
+        'MEDIUMINT': {min: -8388608, max: 8388607, unsigned: 16777215},
+        'INTEGER': {min: -2147483648, max: 2147483647, unsigned: 4294967295},
+        // BIGINT 由于 JS 数值限制，小 Number.MIN_SAFE_INTEGER = -9007199254740991   Number.MAX_SAFE_INTEGER = 9007199254740991
+        'BIGINT': {min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER, unsigned: Number.MAX_SAFE_INTEGER}
+    }
+}
+
 module.exports = class Logic {
 
     title = 'Logic'
     RESTfull = {}
     actions = {}
+    variableRange = {
+        MySQL: MySQLVariableRange
+    }
 
     constructor(app, options={}) {
         this.app = app
@@ -24,7 +38,7 @@ module.exports = class Logic {
         return {
             page: {
                 title: '分页页码',
-                int: {min: 1, max: 1000000000},
+                int: {min: 1, max: MySQLVariableRange.integer['INTEGER'].unsigned},
                 default: 1
             },
             size: {
@@ -41,7 +55,7 @@ module.exports = class Logic {
     }
 
     // 混合数据
-    mixin(base={}, options={}) {
+    mixin(base = {}, options = {}) {
 
         // 预处理
         let obj = {}
@@ -145,14 +159,6 @@ module.exports = class Logic {
                             // NOW, UUIDV1, UUIDV4
 
                             if (~['TINYINT', 'SMALLINT', 'MEDIUMINT', 'INTEGER', 'BIGINT'].indexOf(typeName)) {
-                                const integerLegalRange = {
-                                    'TINYINT': {min: -128, max: 127, unsigned: 255},
-                                    'SMALLINT': {min: -32768, max: 32767, unsigned: 65535},
-                                    'MEDIUMINT': {min: -8388608, max: 8388607, unsigned: 16777215},
-                                    'INTEGER': {min: -2147483648, max: 2147483647, unsigned: 4294967295},
-                                    // BIGINT 由于 JS 数值限制，小 Number.MIN_SAFE_INTEGER = -9007199254740991   Number.MAX_SAFE_INTEGER = 9007199254740991
-                                    'BIGINT': {min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER, unsigned: Number.MAX_SAFE_INTEGER}
-                                }
                                 // 整数
                                 if (obj[name].int === undefined) {
                                     obj[name].int = {}
@@ -169,14 +175,14 @@ module.exports = class Logic {
                                 }
                                 // 最小值不能超过限制
                                 if (obj[name].int && obj[name].int.min) {
-                                    const compare = typeOptions.unsigned ? 0 : integerLegalRange[typeName].min
+                                    const compare = typeOptions.unsigned ? 0 : MySQLVariableRange.integer[typeName].min
                                     if (obj[name].int.min <= compare) {
                                         obj[name].int.min = compare
                                     }
                                 }
                                 // 最大值不能超过限制
                                 if (obj[name].int && obj[name].int.max) {
-                                    const compare = typeOptions.unsigned ? integerLegalRange[typeName].unsigned : integerLegalRange[typeName].max
+                                    const compare = typeOptions.unsigned ? MySQLVariableRange.integer[typeName].unsigned : MySQLVariableRange.integer[typeName].max
                                     if (obj[name].int.max >= compare) {
                                         obj[name].int.max = compare
                                     }
