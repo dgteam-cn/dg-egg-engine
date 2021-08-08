@@ -1,8 +1,9 @@
 {
   "name": "@dgteam/egg-engine",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "author": "2681137811 <donguayx@qq.com>",
   "description": "",
+  "main": "index.js",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
     "@dgteam/helper": "^0.3.0",
@@ -54,7 +55,9 @@
   "files": [
     "app",
     "config",
+    "core",
     "lib",
+    "plugin",
     "app.js",
     "agent.js",
     "index.js"
