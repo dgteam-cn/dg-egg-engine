@@ -42,7 +42,7 @@ module.exports = {
         return obj
     },
 
-    err(err=404, msg, data=null) {
+    err(err = 404, msg, data = null) {
         // class Err extends Object {
         //     constructor(err, msg, data){
         //         super()
@@ -71,6 +71,12 @@ module.exports = {
             504: 'server maintenance.',          // 504  服务器维护
             505: 'protocol not supported.',      // 505  请求协议不支持
             510: 'server resources deficient.'   // 510  服务器内部错误（一般用于测试环境的错误栈追踪）
+        }
+        if (typeof err === 'object') {
+            const errObj = err
+            err = Number.isInteger(errObj.err) ? errObj.err : 404
+            if (!msg && errObj.msg && typeof errObj.msg === 'string') msg = errObj.msg
+            if (!data && errObj.result) data = errObj.result
         }
         if (err && typeof msg != 'string' && map[err]) {
             msg = map[err]

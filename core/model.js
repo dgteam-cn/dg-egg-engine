@@ -89,7 +89,7 @@ module.exports = class Model {
             marker: undefined,
             paranoid: true // 不查询软删除的记录
         }
-        this.client = this._deepSearcher(this.app.model, name.split('/'))
+        this.client = this._deepSearcher(this.app.model, name.replace(/_/g, "/").split('/')) // 2021-09-01 "_" 会自动变换为 /
     }
 
     // 查询模型实例
@@ -417,16 +417,16 @@ module.exports = class Model {
     }
 
     // 删除数据
-    delete({force=false}={}) {
+    delete({hooks = true, force = false, truncate = false, cascade = false} = {}) {
         const {where} = this._formatOption()
         if (isEmpty(where) ) throw this._error('delete() => item need condition.')
-        return this.client.destroy({where, force})
+        return this.client.destroy({where, hooks, force, truncate, cascade})
     }
     // 恢复数据（仅限软删除）
-    restore({force=false}={}) {
+    restore({hooks = true} = {}) {
         const {where} = this._formatOption()
         if (isEmpty(where) ) throw this._error('restore() => item need condition.')
-        return this.client.restore({where, force})
+        return this.client.restore({where, hooks})
     }
 
 

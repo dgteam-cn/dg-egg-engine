@@ -7,7 +7,7 @@ const crypto = require('crypto')
 const axios = require('axios')
 const querystring = require("querystring")
 
-module.exports = class AuthorizationService extends Service {
+module.exports = class QiniuService extends Service {
 
     // 参数
     get QINIU_ACCESS() {

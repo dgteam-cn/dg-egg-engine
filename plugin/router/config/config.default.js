@@ -7,7 +7,7 @@ module.exports = () => {
             origin: '*',
             credentials: true,
             expired: 900, // 授权时间
-            headers: 'Accept,Authorization,Cache-Control,Content-Type,Identity,Verify', // 默认允许跨域头
+            headers: 'Accept,Authorization,Cache-Control,Content-Type,Identity,Verify,Access,Timestamp,Sign', // 默认允许跨域头
             methods: 'GET, POST, PUT, PATCH, DELETE' // 默认允许跨方法
         },
         router: {

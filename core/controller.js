@@ -144,6 +144,13 @@ class RESTfullController extends Controller {
         const fieldReverse = await getGEToptions('fieldReverse') || [] // 2021-07-20 [修复]  ['deleted_at'] => [] 默认就已经剔除了软删除数据，无需额外排除此字段
         const include = await getGEToptions('include') || []
 
+        // 2021-08-29 修复 ctx.RESTful.include 参数仅在 list 中生效，而 item 不生效的问题
+        if (ctx.RESTful.include) {
+            Array.isArray(ctx.RESTful.include) ?
+                include.push(...ctx.RESTful.include) :
+                include.push(ctx.RESTful.include)
+        }
+
         const model = this.table(this.options.model)
         if (index) {
             const item = await model.where(Object.assign({}, limit, index)).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include).find()
@@ -157,12 +164,7 @@ class RESTfullController extends Controller {
             const {query, marker} = ctx.RESTful
             let {order} = ctx.RESTful
             const {page, size} = param
-            // TODO 此处仅在 list 中生效，item 不生效
-            if (ctx.RESTful.include) {
-                Array.isArray(ctx.RESTful.include) ?
-                    include.push(...ctx.RESTful.include) :
-                    include.push(ctx.RESTful.include)
-            }
+
             /**
              * marker 方式
              * 在 plugin/middleware/logic.js 中会对 marker 进行解析，如果解析成功，可以从 ctx.RESTful.marker 中获取

@@ -73,5 +73,48 @@ module.exports = {
         }
         this[POST][name] = value
         return this
+    },
+
+
+    /**
+     * 用户鉴权判定逻辑
+     */
+    async _logicInspectIdentity(ctx) {
+
+        // const ctx = this
+        const {isEmpty, redis, identity} = ctx
+
+        let {authorization: token} = ctx.request.header
+
+        // 没有 token 但是又指定了身份
+        if (!token && identity !== 'none') return {err: 401, msg: 'permission need token.'}
+
+        if (identity !== 'none') {
+
+            const token_dncrypt = ctx.service.authorization.dncrypt(token) // 直接对用户提交的 token 进行解析
+            if (token_dncrypt.err) return {err: 401, msg: 'this token is invalid.'} // 令牌不合法
+
+            // 用户基础身份验证
+            const row_user = await redis.hget(`UID_${token_dncrypt.result.uid}`, undefined, {db: 1}) // 从缓存库中获取用户信息进行交叉对比
+            if (isEmpty(row_user) || !row_user.base || !row_user.base.id) return {err: 401, msg: 'this account is expired.'} // 令牌失效返回错误
+
+            // 授权令牌双向验证
+            if (!row_user.base.auth) return {err: 500, msg: 'this account is expired.'} // 如果没有签发 token 记录，那么这个 token 是非法的
+            const tokens = {}
+            for (let type in row_user.base.auth) {
+                tokens[row_user.base.auth[type]] = type
+            }
+            if (!tokens[token_dncrypt.token]) return {err: 401, msg: 'this token is expired.'} // 如果令牌过期也会触发
+            ctx.authorization = {data: token_dncrypt.result, identity: identity, token: token_dncrypt.token, tokens}
+
+            // 用户特殊身份验证
+            if (identity !== 'default' && !row_user[identity]) return {err: 402, msg: `this account does not has '${identity}' permission.`}
+
+            ctx.user = row_user
+            ctx.RESTful.user = row_user
+        } else {
+            ctx.user = {base: {id: null}}
+            ctx.RESTful.user = {base: {id: null}}
+        }
     }
 }

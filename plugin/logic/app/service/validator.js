@@ -63,9 +63,9 @@ _Validator.rules.RESTful_range = (value, {argName, validValue, ctx}) => {
 module.exports = class Validator extends Service {
 
     // 测试自定义数据对象
-    test(params, rules, msgs) {
+    test(params, rules, msgs, opt = {}) {
         try {
-            const examiner = new _Validator(null)
+            const examiner = new _Validator(null, opt)
             return examiner.validate(rules, msgs, params)
         } catch (err) {
             return {'validator rules error.': err.message}
@@ -73,9 +73,11 @@ module.exports = class Validator extends Service {
     }
 
     // 测试 ctx 请求参数数据
-    checkup(rules, msgs) {
+    checkup(rules, msgs, opt = {}) {
         try {
-            const examiner = new _Validator(this.ctx)
+            const {language} = this.app.config.logic && this.app.config.logic.validator || {}
+            const options = Object.assign({}, {language}, opt)
+            const examiner = new _Validator(this.ctx, options) // {language: 'zh'}
             return examiner.validate(rules, msgs)
         } catch (err) {
             return {'validator rules error.': err.message}

@@ -1,3 +1,11 @@
+    dg-validator 非 string 的空字符串，应当以 undefined 处理
+    dg-validator 需要支持动态鉴权
+    plugin/logic 应当先执行用户鉴权在进行表单验证（最好可以设为可配置）
+    plugin/logic 需要支持企业认证的方式
+0.1.6
+    [] logic 支持 config 配置参数
+    // logic 支持动态配置语言
+
 0.1.5
     [修复] 在 package.json 漏配置 files 导致发布时文件缺失的问题
 
