@@ -99,7 +99,7 @@ module.exports = class Logic {
         // 应用参数与反应用参数
         if (Array.isArray(field)) {
             for (const name in obj) {
-                if (~field.indexOf(name)) {
+                if (!~field.indexOf(name)) {
                     delete obj[name]
                 }
             }

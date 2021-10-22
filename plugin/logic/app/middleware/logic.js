@@ -213,7 +213,7 @@ module.exports = options => {
         ctx.RESTful.id = checkup.result.id
         ctx.RESTful.identity = ctx.identity
         ctx.RESTful.param = checkup.param
-
+        console.log('\n\n !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', ctx.RESTful.param, ctx.post(), '\n')
         const auth_account = await ctx._logicInspectIdentity(ctx)
         if (auth_account && auth_account.err) return ctx.err(auth_account.err, auth_account.msg)
 

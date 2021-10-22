@@ -87,7 +87,8 @@ module.exports = class Model {
             limit: undefined,
             offset: undefined,
             marker: undefined,
-            paranoid: true // 不查询软删除的记录
+            paranoid: true, // 不查询软删除的记录
+            logging: false
         }
         this.client = this._deepSearcher(this.app.model, name.replace(/_/g, "/").split('/')) // 2021-09-01 "_" 会自动变换为 /
     }
@@ -298,15 +299,21 @@ module.exports = class Model {
         }
         return this
     }
-
-
+    logging(fun = true) {
+        if (fun) {
+            this.options.logging = typeof fun === 'function' ? fun : console.log
+        } else {
+            this.options.logging = false
+        }
+        return this
+    }
     find() {
-        const {where, attributes, include, order, paranoid} = this._formatOption()
-        return this.client.findOne({where, attributes, include, order, paranoid})
+        const {where, attributes, include, order, paranoid, logging} = this._formatOption()
+        return this.client.findOne({where, attributes, include, order, paranoid, logging})
     }
     select() {
-        const {where, attributes, include, limit, offset, order, paranoid} = this._formatOption()
-        return this.client.findAll({where, attributes, include, limit, offset, order, paranoid})
+        const {where, attributes, include, limit, offset, order, paranoid, logging} = this._formatOption()
+        return this.client.findAll({where, attributes, include, limit, offset, order, paranoid, logging})
     }
 
     // 分页查询
@@ -343,7 +350,7 @@ module.exports = class Model {
      */
     count(options) {
         const {where, paranoid} = this._formatOption()
-        return this.client.count({...options, where, paranoid})
+        return this.client.count({where, paranoid, ...options})
     }
     min(field, options) {
         const {where, paranoid} = this._formatOption()
@@ -372,15 +379,15 @@ module.exports = class Model {
     }
 
 
-    update(item={}) {
+    update(item = {}) {
         const {where, paranoid} = this._formatOption()
         return this.client.update(item, {where, paranoid}) // 更新数据
     }
-    thenUpdate(item={}) {
+    thenUpdate(item = {}) {
         return this.client.upsert(item) // 若包含主键则更新数据，否则新增数据，此处无法 where 限制条件
     }
 
-    increment(key, number=1) {
+    increment(key, number = 1) {
         const update = {}
         if (typeof key === 'string') {
             update[key] = this.app.Sequelize.literal(`\`${key}\` +${number}`)

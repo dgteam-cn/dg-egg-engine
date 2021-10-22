@@ -6,7 +6,7 @@
   "main": "index.js",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
-    "@dgteam/helper": "^0.3.0",
+    "@dgteam/helper": "^0.3.3",
     "@dgteam/validator": "^0.0.6",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",

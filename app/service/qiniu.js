@@ -155,6 +155,10 @@ module.exports = class QiniuService extends Service {
         return Array.isArray(body) ? Array.from(body, row => imagePreview(row)) : imagePreview(body)
     }
 
+    // bodyFormat(body, keys = [],) {
+
+    // }
+
     info(bucket, key) {
         return new Promise(resolve => {
             this.BucketManager.stat(bucket, key, (err, res) => {
