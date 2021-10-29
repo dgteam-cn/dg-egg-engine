@@ -165,6 +165,9 @@ class RESTfullController extends Controller {
             let {order} = ctx.RESTful
             const {page, size} = param
 
+            // TODO 2021-07-22 marker 查询可以省略一次 count 检索提升效率
+            const modelHandler = model.where(Object.assign({}, query, limit)).order(order).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include)
+
             /**
              * marker 方式
              * 在 plugin/middleware/logic.js 中会对 marker 进行解析，如果解析成功，可以从 ctx.RESTful.marker 中获取
@@ -179,19 +182,37 @@ class RESTfullController extends Controller {
                 if (!marker.size) marker.size = size
                 // if (!order || order.length === 0) order = ['id ASC']
                 // if (!marker.order) marker.order = order.join(',')
-                if (order && ~order.indexOf('id DESC')) {
+
+                // if (order && ~order.indexOf('id DESC')) {
+                //     if (marker.id) {
+                //         query['id'] = ['<', marker.id]
+                //     }
+                //     marker.sort = 'DESC'
+                // } else {
+                //     query['id'] = ['>', marker.id]
+                //     marker.sort = 'ASC'
+                // }
+
+                // 2021-10-26 调整判断正序倒序的策略
+                // 目前只支持 id 或 created_at 方式排序，其他排序会打乱 id 字段导致分页错误
+                const DESCObj = Array.from(modelHandler.options.order).find(values => {
+                    if (values[1] === 'DESC' && ~['id', 'created_at'].indexOf(values[0])) return true
+                    // if (values[2] === 'DESC' && ~['id', 'created_at'].indexOf(values[1])) return true
+                    return false
+                })
+                if (!DESCObj) {
+                    modelHandler.where({id: ['>', marker.id]})
+                    marker.sort = 'ASC'
+                } else {
                     if (marker.id) {
-                        query['id'] = ['<', marker.id]
+                        modelHandler.where({id: ['<', marker.id]})
                     }
                     marker.sort = 'DESC'
-                } else {
-                    query['id'] = ['>', marker.id]
-                    marker.sort = 'ASC'
                 }
+                console.log(modelHandler)
+                // console.log('\n is DESC:', !!DESCObj, Array.from(modelHandler.options.order), marker, '\n', query, '\n')
             }
 
-            // TODO 2021-07-22 marker 查询可以省略一次 count 检索提升效率
-            const modelHandler = model.where(Object.assign({}, query, limit)).order(order).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include)
             const list = marker ?
                 await modelHandler.selectMarker(marker) :
                 await modelHandler.selectPage(page, size)
@@ -205,24 +226,29 @@ class RESTfullController extends Controller {
         const data = Object.assign({}, param, limit)
         const row = await this.table(this.options.model).add(data)
         row && row.id ? ctx.suc(row) : ctx.err(500)
-        // if (row && row.id) {
-        //     ctx.suc(row)
-        // } else {
-        //     ctx.err(500)
-        // }
     }
 
     PUT = async (param = this.ctx.RESTful.param, index = this.RESTfulIndex('PUT', true)) => {
         const {ctx} = this
         const limit = await this.RESTfulLimit('PUT')
         if (index) {
-            const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).update(param)
-            Array.isArray(result) && result[0] ? ctx.suc(Object.assign(param, index)) : ctx.err(404)
-            // if (Array.isArray(result) && result[0]) {
-            //     ctx.suc(Object.assign(param, index))
-            // } else {
-            //     ctx.err(404)
-            // }
+            const accurate = Boolean(this.opt.PUT && this.opt.PUT.accurate) // 是否为精确修改
+            if (accurate) {
+                // 如果在 BeforePUT 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
+                const row = ctx.RESTful.row && typeof ctx.RESTful.row.update === 'function' ?
+                    ctx.RESTful.row :
+                    await this.table(this.options.model).where(Object.assign({}, limit, index)).find()
+                if (!ctx.isEmpty(row)) {
+                    ctx.RESTful.beforeRowUpdate = row.toJSON()
+                    await row.update(param)
+                    ctx.suc(row)
+                } else {
+                    ctx.err(404)
+                }
+            } else {
+                const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).update(param)
+                Array.isArray(result) && result[0] ? ctx.suc(Object.assign(param, index)) : ctx.err(404)
+            }
         } else {
             ctx.err(500)
         }
@@ -233,9 +259,24 @@ class RESTfullController extends Controller {
         const index = this.RESTfulIndex('DELETE', true)
         const limit = await this.RESTfulLimit('DELETE')
         const force = Boolean(this.opt.DELETE && this.opt.DELETE.force) // 是否为物理删除
+        const accurate = Boolean(this.opt.DELETE && this.opt.DELETE.accurate) // 是否为精确修改
         if (index) {
-            const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).delete({force})
-            result ? ctx.suc(index) : ctx.err(404)
+            if (accurate) {
+                // 如果在 BeforePUT 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
+                const row = ctx.RESTful.row && typeof ctx.RESTful.row.destroy === 'function' ?
+                    ctx.RESTful.row :
+                    await this.table(this.options.model).where(Object.assign({}, limit, index)).find()
+                if (!ctx.isEmpty(row)) { // destroy
+                    ctx.RESTful.beforeRowDelete = row.toJSON()
+                    await row.destroy({force})
+                    ctx.suc(ctx.RESTful.beforeRowDelete)
+                } else {
+                    ctx.err(404)
+                }
+            } else {
+                const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).delete({force})
+                result ? ctx.suc(index) : ctx.err(404)
+            }
         }
     }
 

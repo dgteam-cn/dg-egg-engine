@@ -77,7 +77,7 @@ module.exports = class Model {
         this.app = app
         this.options = {
             where: {},
-            order: {},
+            order: new Set(),
             page: null,
             field: new Set(),
             fieldInclude: new Set(),
@@ -137,10 +137,14 @@ module.exports = class Model {
                 }
             }
         }
-        if (order && isObject(order)) {
-            for (let key in order) {
-                options.order.push([key, order[key]])
-            }
+        // if (order && isObject(order)) {
+        // for (let key in order) {
+        //     options.order.push([key, order[key]])
+        // }
+        // }
+        // 2021-10-26 order 已经改为 Set 对象
+        if (order.size > 0) {
+            options.order = Array.from(order)
         }
         options.where = this._whereFactory(where)
         return options
@@ -287,14 +291,14 @@ module.exports = class Model {
                 if (typeof row === 'string') {
                     row = trimStr(row).split(' ')
                 }
-                if (!isArray(row)) {
+                if (!isArray(row) || row.length < 2 || row.length > 3) {
                     throw this._error("order() => 'opt' is invalid.")
                 }
                 const [key, sort] = row
                 if (typeof key != 'string' || !~['ASC', 'DESC'].indexOf(sort)) {
                     throw this._error("order() => 'opt' is invalid.")
                 }
-                this.options.order[key] = sort
+                this.options.order.add(row) // [key] = sort
             }
         }
         return this
@@ -369,7 +373,7 @@ module.exports = class Model {
     add(item, options) {
         return this.client.create(item, options)
     }
-    thenAdd(item, check) {
+    thenAdd(item, check = {}) {
         this.where(check)
         const {where, paranoid} = this._formatOption()
         return this.client.findOrCreate({where, paranoid, defaults: item})
@@ -499,5 +503,10 @@ module.exports = class Model {
     // }
     getOptions() {
         return this.client.options
+    }
+
+    // 创建非持久化的实例
+    build(opt) {
+        return this.client.build(opt)
     }
 }

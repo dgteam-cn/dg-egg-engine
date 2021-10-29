@@ -15,6 +15,7 @@ module.exports = () => {
             defaultController: 'index', // 默认控制器
             defaultAction: 'index', // 默认方法
             primaryKey: 'id', // 默认路由主键字段
+            camelCase: true, // path 自动转为驼峰命名
             middleware: {}
         }
     }

@@ -1,8 +1,9 @@
 const Model = require('../../core/model.js')
+const _ = require('lodash')
 const helper = require('@dgteam/helper')
 const {md5, base64} = require('@dgteam/helper/dist/hash.js')
 module.exports = {
-    helper,
+    helper, _, // lodash
     get models() {
         return this.model.models
     },

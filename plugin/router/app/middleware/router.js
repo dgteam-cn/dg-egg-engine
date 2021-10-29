@@ -28,10 +28,12 @@ module.exports = options => {
 
         const isDev = ctx.app.config.env !== 'prod'
         const {controller: CTRLS} = ctx.app.router.format
+        const {camelCase} = ctx.app.config.router
 
         let module, controller, action;
         const origin = ctx.originalUrl.split('?')
-        const originaPath = origin[0].replace(/(^\/*)|(\/*$)/g, "").split('/') // 注意需要去除头尾的斜杠
+        const originPath = camelCase ? Array.from(origin[0].split('/'), str => ctx._.camelCase(str)).join('/') : origin[0]
+        const originaPath = originPath.replace(/(^\/*)|(\/*$)/g, "").split('/') // 注意需要去除头尾的斜杠
 
         // 强制模块名，若未定义则取默认值
         if (!originaPath[0] || originaPath[0] === '') {

@@ -51,6 +51,7 @@ _Validator.rules.RESTful_range = (value, {argName, validValue, ctx}) => {
     return true
 }
 
+
 // // TODO 需要支持
 // _Validator.rules.RESTful_like = (value, {argName, validValue, ctx}) => {
 //     const key = validValue && typeof validValue === 'string' ? validValue : argName
@@ -60,12 +61,28 @@ _Validator.rules.RESTful_range = (value, {argName, validValue, ctx}) => {
 //     return true
 // }
 
+// 数字必须是 xx 的倍数
+_Validator.rules.multiple = (value, {argName, validValue, ctx}) => {
+    if (value && typeof validValue === 'number') {
+        try {
+            if (ctx.big(value).mod(validValue).toString() !== '0') {
+                return {[argName]: `The number must be a multiple of ${validValue}`}
+            }
+        } catch (e) {
+            return {[argName]: 'Number format error'}
+        }
+    }
+    return true
+}
+
 module.exports = class Validator extends Service {
 
     // 测试自定义数据对象
     test(params, rules, msgs, opt = {}) {
         try {
-            const examiner = new _Validator(null, opt)
+            const config = this.app.config.logic  && this.app.config.logic.validator || {}
+            const {language} = config
+            const examiner = new _Validator(null, Object.assign({language}, opt))
             return examiner.validate(rules, msgs, params)
         } catch (err) {
             return {'validator rules error.': err.message}
@@ -75,12 +92,16 @@ module.exports = class Validator extends Service {
     // 测试 ctx 请求参数数据
     checkup(rules, msgs, opt = {}) {
         try {
-            const {language} = this.app.config.logic && this.app.config.logic.validator || {}
-            const options = Object.assign({}, {language}, opt)
-            const examiner = new _Validator(this.ctx, options) // {language: 'zh'}
+            const config = this.app.config.logic  && this.app.config.logic.validator || {}
+            const {language} = config
+            const examiner = new _Validator(this.ctx, Object.assign({language}, opt)) // {language: 'zh'}
             return examiner.validate(rules, msgs)
         } catch (err) {
             return {'validator rules error.': err.message}
         }
+    }
+
+    addRule(validName, callback) {
+        return _Validator.addRule(validName, callback)
     }
 }

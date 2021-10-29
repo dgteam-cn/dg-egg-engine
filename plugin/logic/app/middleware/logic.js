@@ -152,10 +152,11 @@ module.exports = options => {
         // }
 
         ctx.RESTful = {
+            row: null, // 操作的单行对象
             method: METHOD, action,
             limit: {}, // ctx 键入
             query: {}, // logic -> validator.js 键入
-            param: {},
+            param: {}, // 表单参数
             marker: null,
             order: [] // logic -> validator.js 键入
         }
@@ -213,7 +214,7 @@ module.exports = options => {
         ctx.RESTful.id = checkup.result.id
         ctx.RESTful.identity = ctx.identity
         ctx.RESTful.param = checkup.param
-        console.log('\n\n !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', ctx.RESTful.param, ctx.post(), '\n')
+
         const auth_account = await ctx._logicInspectIdentity(ctx)
         if (auth_account && auth_account.err) return ctx.err(auth_account.err, auth_account.msg)
 

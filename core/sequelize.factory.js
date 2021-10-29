@@ -132,8 +132,8 @@ module.exports = class {
 
                 // 关联查询枚举
                 const relationType = {
-                    'HAS_ONE': 'hasOne',
-                    'BELONG_TO': 'belongsTo',
+                    'HAS_ONE': 'hasOne', // foreignKey sourceKey
+                    'BELONG_TO': 'belongsTo', // foreignKey targetKey
                     'HAS_MANY': 'hasMany',
                     'MANY_TO_MANY': 'belongsToMany'
                 }
@@ -141,7 +141,7 @@ module.exports = class {
                 // 遍历查询
                 for (const row of this.relation) {
 
-                    let {model, type, foreign: foreignKey, target: targetKey, as, constraints} = row
+                    let {model, type, foreign: foreignKey, target: targetKey, source: sourceKey, as, constraints} = row
 
                     const Self = deepSearcher(this.app.model, JSON.parse(JSON.stringify(this.paths))) // 自己
                     const Target = deepSearcher(this.app.model, model.split('/')) // 关联目标
@@ -152,7 +152,7 @@ module.exports = class {
                     const typeAction = relationType[type] ? relationType[type] : type
                     // console.log(this.app.model)
                     if (Self) {
-                        Self[typeAction](Target, {foreignKey, targetKey, as, constraints}) // as: `$${model.split('_')}`
+                        Self[typeAction](Target, {foreignKey, targetKey, sourceKey, as, constraints}) // as: `$${model.split('_')}`
                     } else {
                         throw new Error('can not found model')
                     }

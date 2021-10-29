@@ -1,4 +1,5 @@
 const Model = require('../../core/model.js')
+const _ = require('lodash')
 const {
     extend, origin, big, price, priceUppercase, prefixZero, uuid, time, timestamp,
     isEmpty, isArray, isObject
@@ -6,6 +7,8 @@ const {
 const {md5, base64, base64Decode, base64Encode, base64EncodeURI} = require('@dgteam/helper/dist/hash.js')
 
 module.exports = {
+
+    _, // lodash
 
     $err: 0,
     $result: null,

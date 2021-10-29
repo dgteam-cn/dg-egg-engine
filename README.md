@@ -1,9 +1,30 @@
-    dg-validator 非 string 的空字符串，应当以 undefined 处理
-    dg-validator 需要支持动态鉴权
-    dg-validator in 类型时，填空字符串也能通过
+
+    自定义主键规则
+    自定义次级主键规则（sn）
+    由于 _ 会导致某些冲突，所有路由、路径等都不应用蛇形命名法
+        - 应给予框架级别的提示
+    优化 model 实例操作时的时间格式
+    logic validator 新增配置增加新规则或动态增减规则
+
+!0.1.8
+
+
+0.1.7
+    [修复] @dgteam/validator 非 string 的空字符串，应当以 undefined 处理
+    [修复] @dgteam/validator需要支持动态鉴权
+    [修复] @dgteam/validator in 类型时，填空字符串也能通过
     [新增] plugin/logic 应当先执行用户鉴权在进行表单验证（最好可以设为可配置）
     [修复] logic mixin() options.field 字段含义错误
     [新增] model 新增 logging 方法打印 SQL 函数
+    [新增] 默认增加 lodash 库，并挂在在 app 与 ctx 下
+    [新增] plugin/router 支持路径自动蛇形转驼峰的配置项
+    [优化] RESFul 中 PUT 方法调整为使用 Sequelize 的原生 RowUpdate 策略
+        - 如果使用原生策略会导致需要请求两次才能完成 update 请求
+        - 新增 PUT / DELETE 精确修改字段 accurate, 使用此字段会修改后可以在 ctx.RESTful.beforeRowUpdate / ctx.RESTful.beforeRowDelete 获取到修改前的数据
+        - 同时触发不一样的 Sequelize 钩子函数
+        - 如果在 BeforePUT、BeforeDELETE 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
+    [优化] 优化在 marker 中，除了 id 外增加 created_at 兼容性
+    [优化] 在 model 中强化 order 的排序
 
 0.1.6
     [] logic 支持 config 配置参数
