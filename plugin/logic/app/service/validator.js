@@ -1,6 +1,6 @@
 const Service = require('egg').Service
 const _Validator = require('@dgteam/validator')
-
+const {big} = require('@dgteam/helper')
 /**
  * 可对主体类的 rules 进行添加或覆盖原规则
  * @param {string} argName                  - 用户提交参数名
@@ -62,10 +62,10 @@ _Validator.rules.RESTful_range = (value, {argName, validValue, ctx}) => {
 // }
 
 // 数字必须是 xx 的倍数
-_Validator.rules.multiple = (value, {argName, validValue, ctx}) => {
+_Validator.rules.multiple = (value, {argName, validValue}) => {
     if (value && typeof validValue === 'number') {
         try {
-            if (ctx.big(value).mod(validValue).toString() !== '0') {
+            if (big(value).mod(validValue).toString() !== '0') {
                 return {[argName]: `The number must be a multiple of ${validValue}`}
             }
         } catch (e) {

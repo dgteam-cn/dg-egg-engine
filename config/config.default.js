@@ -11,13 +11,13 @@ module.exports = appInfo => {
                 secret: '@dgteam/egg-engine' // 修改后会导致所有用户 token 失效
             }
         },
-        cluster: {
-            listen: {
-                port: 7001,
-                hostname: '127.0.0.1',
-                workers: 2
-            }
-        },
+        // cluster: {
+        //     listen: {
+        //         port: 7001,
+        //         hostname: '127.0.0.1',
+        //         workers: 2
+        //     }
+        // },
 
         bodyParser: {
             enable: true,

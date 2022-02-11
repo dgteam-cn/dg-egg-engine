@@ -130,15 +130,15 @@ module.exports = {
         }
     },
 
-    mock(data=null, msg="mock data.") {
-        this.suc(data, msg, 202)
-    },
+    // mock(data=null, msg="mock data.") {
+    //     this.suc(data, msg, 202)
+    // },
 
-    randomInt(num=6) {
-        let r = Math.random() + ''
-        let n = r.substring(2, 2+num)
-        return n
-    },
+    // randomInt(num=6) {
+    //     let r = Math.random() + ''
+    //     let n = r.substring(2, 2+num)
+    //     return n
+    // },
 
     // exportToExcel(cols, list) {
     //     const table = {cols, rows: []}

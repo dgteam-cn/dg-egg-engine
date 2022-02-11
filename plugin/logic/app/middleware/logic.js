@@ -127,7 +127,7 @@ const checkPermission = (identity, ctx, logic) => {
 module.exports = options => {
 
     return async function(ctx, next) {
-
+        // console.log('\n middleware logic start \n')
         // const opt = Object.assign({}, {
         //     enableIdentity: true, // 启用身份验证
         //     enableParams: true // 启用参数验证

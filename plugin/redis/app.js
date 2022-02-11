@@ -38,11 +38,9 @@ module.exports = app => {
     redis.lock = function(resource = 'redlock', ttl = 10000) {
         if (!Pool[REDLOCK]) {
             Pool[REDLOCK] = new Redlock(
-                [
-                    Redis.createClient(
-                        Object.assign({}, app.config.redis, {db: 4})
-                    )
-                ],
+                [Redis.createClient(
+                    Object.assign({}, app.config.redis, {db: 4})
+                )],
                 Object.assign({
                     driftFactor: 0.01, // 预期的时钟漂移，会与 ttl 相乘
                     retryCount: 8, // 重试次数
@@ -55,8 +53,8 @@ module.exports = app => {
             })
         }
         return Pool[REDLOCK].lock(resource, ttl).then(lock => lock).catch(err => {
-            console.error('[redis/redlock.js] err：超出队列最大长度', err)
-            return Promise.reject(false)
+            // console.error('[redis/redlock.js] err：超出队列最大长度', err)
+            return Promise.resolve(false) // Promise reject 无法在 await 中获取，因此改为 resolve
         })
     }
 

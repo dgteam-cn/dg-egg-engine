@@ -1,3 +1,3 @@
 module.exports = app => {
-    app.config.coreMiddleware.push('error')
+    app.config.coreMiddleware.push('checkup')
 }

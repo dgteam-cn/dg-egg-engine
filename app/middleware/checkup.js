@@ -11,7 +11,6 @@ const isDev = process.env.NODE_ENV !== 'production'
  */
 module.exports = options => {
     return async function(ctx, next) {
-
         try {
             await next()
             if (typeof ctx.$err === 'number' && ctx.$err > 0) {
@@ -32,15 +31,12 @@ module.exports = options => {
                 ctx.logger.error(err)
             }
         }
-
         // 如果有锁则释放锁
-        // console.log('\n\n', 'ctx.RedisLock.unlock', '\n')
+        // console.log('\n\n', 'error ctx.RedisLock.unlock', '\n')
         if (ctx.RedisLock) {
             try {
                 ctx.RedisLock.unlock()
-            } catch (err) {
-                console.error(err)
-            }
+            } catch (err) {}
         }
     }
 }

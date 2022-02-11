@@ -85,10 +85,8 @@ class RESTfullController extends Controller {
             if (!LockName || typeof LockName !== 'string') {
                 LockName = this.options.model ? this.options.model : this.storePath
             }
-            ctx.RedisLock = await ctx.redis.lock(LockName, 15000)
-            if (!ctx.RedisLock) {
-                return ctx.err(503, ctx.isDev ? '[RedisLock] 服务器繁忙,请稍候重试' : '服务器繁忙,请稍候重试')
-            }
+            ctx.RedisLock = await ctx.redis.lock(LockName, 150000)
+            if (!ctx.RedisLock) return ctx.err(503)
         }
 
         // 前置中间件
@@ -104,7 +102,7 @@ class RESTfullController extends Controller {
         if (this[method]) {
             await this[method]()
         } else {
-            return this.Err(405)
+            return ctx.err(405)
         }
 
         // 后置中间件
@@ -117,7 +115,10 @@ class RESTfullController extends Controller {
             }
         }
 
-        // if (this.ctx.RedisLock) this.ctx.RedisLock.unlock()  // 如果有锁则释放锁
+        if (ctx.RedisLock) {
+            ctx.RedisLock.unlock()  // 如果有锁则释放锁，另外
+            ctx.RedisLock = null // 设置为空，后面的中间价可以作为判断，避免重复解锁
+        }
     }
 
 
