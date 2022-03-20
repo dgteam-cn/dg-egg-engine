@@ -8,12 +8,13 @@ module.exports = app => {
 
     // const index = app.config.coreMiddleware.indexOf('router')
     // app.config.coreMiddleware.splice(index + 1, 0, 'logic') // 在执行 logic 之前，必须先通过用户鉴权
+
     app.config.coreMiddleware.push('logic')
 
     app.beforeStart(async () => {
 
         // 在 APP 运行之前必须加载路由校验逻辑
-        const readFileList = function(dir, location="", map={}) {
+        const readFileList = function(dir, location = "", map = {}) {
             const files = fs.readdirSync(dir)
             files.forEach(item => {
                 const fullPath = path.join(dir, item)

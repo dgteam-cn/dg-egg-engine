@@ -170,6 +170,7 @@ module.exports = options => {
                 if (typeof _marker !== 'string') return defaultData // 如果 marker 值属于非法值，均不报错，而是使用默认值覆盖
                 try {
                     let {id, page = 1, order, size} = JSON.parse(base64Decode(_marker))
+                    // console.log(id, page, order, size, typeof id, typeof page, typeof order, typeof size)
                     if (!Number.isInteger(id) || id < 0 || id > 1000000000000 || !Number.isInteger(page) || page < 0 || page > 1000000000000) {
                         id = 0 // 主键兼容性判断
                         page = 1

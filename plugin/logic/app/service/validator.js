@@ -27,9 +27,29 @@ _Validator.rules.RESTful_filter = (value, {argName, validValue, ctx}) => {
 }
 
 // RESTful 指定排序条件
+// 2022-03-03 支持两种方式，如果传入数组则不做检测直接入列
+// 1、字符串 id ASC (多字段逗号隔开，逗号后若接空格会自动去除空格)
+// 2、一元数组 []
+// 3、可枚举对象 {}
 _Validator.rules.RESTful_order = (value, {ctx}) => {
     if (value && ctx.RESTful && ctx.RESTful.order) {
-        ctx.RESTful.order.push(value)
+        if (typeof value === 'string') {
+            const values = Array.from(value.split(/\s*,\s*/), row => row.split(' '))
+            for (const [key, sort] of values) {
+                if (key && ~['ASC', 'DESC'].indexOf(sort)) {
+                    ctx.RESTful.order.push([key, sort])
+                }
+            }
+        } else if (Array.isArray(value)) {
+            ctx.RESTful.order.push(value)
+        } else if (typeof value === 'object' && value) {
+            for (const key in value) {
+                const sort = value[key]
+                if (~['ASC', 'DESC'].indexOf(sort)) {
+                    ctx.RESTful.order.push([key, sort])
+                }
+            }
+        }
     }
     return true
 }

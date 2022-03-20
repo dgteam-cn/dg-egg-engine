@@ -288,9 +288,14 @@ module.exports = class Model {
                 list = opt
             }
             for (let row of list) {
+                // 支持的格式
+                // 字符串 'id ASC'
+                // 数组：['id', 'ASC']
+                // [未实装] 方法：sequelize.fn('max', sequelize.col('age'))
                 if (typeof row === 'string') {
                     row = trimStr(row).split(' ')
                 }
+                // TODO 根据官方文档，可以放宽以下条件以便于支持更多排序配置
                 if (!isArray(row) || row.length < 2 || row.length > 3) {
                     throw this._error("order() => 'opt' is invalid.")
                 }
