@@ -121,6 +121,16 @@ class RESTfullController extends Controller {
         }
     }
 
+    // __getMethodOptions = async (key, type) => {
+    //     const {ctx} = this
+    //     const {method, options = {}} = ctx.RESTful
+    //     const optionsDefault = this.opt[method] || {}
+    //     let valid = null
+    //     if (options[key]) {
+    //         valid
+    //     }
+    //     return typeof valid === 'function' ? await valid(ctx.RESTful, ctx) : valid // 2021-07-20 [新增] 支持回掉函数
+    // }
 
     GET = async (param = this.ctx.RESTful.param) => {
 

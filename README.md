@@ -5,7 +5,9 @@
         - 应给予框架级别的提示
     优化 model 实例操作时的时间格式
     logic validator 新增配置增加新规则或动态增减规则
-
+    [优化] model.order 新增函数支持
+    [优化] 新增 ctx.RESTful.options 对象，可以临时覆盖控制器默认 options
+    
 !0.1.8
 
 

@@ -158,7 +158,8 @@ module.exports = options => {
             query: {}, // logic -> validator.js 键入
             param: {}, // 表单参数
             marker: null,
-            order: [] // logic -> validator.js 键入
+            order: [], // logic -> validator.js 键入
+            options: {} // 2022-03-31 新增，可以临时覆盖控制器默认 options
         }
 
         // 处理 marker 数据

@@ -285,25 +285,29 @@ module.exports = class Model {
             if (typeof opt === 'string') {
                 list = opt.split(/\s*,\s*/)
             } else if (isArray(opt)) {
-                list = opt
+                if (opt.length === 2 && ~['ASC', 'DESC'].indexOf(opt[1])) {
+                    list = [opt]
+                } else {
+                    list = opt
+                }
             }
             for (let row of list) {
                 // 支持的格式
                 // 字符串 'id ASC'
                 // 数组：['id', 'ASC']
-                // [未实装] 方法：sequelize.fn('max', sequelize.col('age'))
+                // 方法：[sequelize.fn('max', sequelize.col('age')), 'ASC']
+                // 其他: [{raw: 'otherfunction(awesomefunction(`col`))'}, 'DESC']
                 if (typeof row === 'string') {
                     row = trimStr(row).split(' ')
                 }
-                // TODO 根据官方文档，可以放宽以下条件以便于支持更多排序配置
                 if (!isArray(row) || row.length < 2 || row.length > 3) {
                     throw this._error("order() => 'opt' is invalid.")
                 }
                 const [key, sort] = row
-                if (typeof key != 'string' || !~['ASC', 'DESC'].indexOf(sort)) {
+                if (!~['object', 'string'].indexOf(typeof key) || !~['ASC', 'DESC'].indexOf(sort)) {
                     throw this._error("order() => 'opt' is invalid.")
                 }
-                this.options.order.add(row) // [key] = sort
+                this.options.order.add(row)
             }
         }
         return this
@@ -381,7 +385,7 @@ module.exports = class Model {
     thenAdd(item, check = {}) {
         this.where(check)
         const {where, paranoid} = this._formatOption()
-        return this.client.findOrCreate({where, paranoid, defaults: item})
+        return this.client.findOrCreate({where, paranoid, defaults: item}) // 此方式会自动创建事务，而 findCreateFind 方式不会
     }
     addMany(list) {
         return this.client.bulkCreate(list) // 批量增加
