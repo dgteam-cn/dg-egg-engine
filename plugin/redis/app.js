@@ -215,13 +215,30 @@ module.exports = app => {
     //     })
     // }
 
-    redis.hset = function(hash, key, content, opt={}) {
-        content = JSON.stringify(content);
-        return new Promise((resolve) => {
-            this.engine(opt.db).hset(hash, key, content, (err, value) => {
-                value ? resolve(true) : resolve(false)
+    redis.hset = function(hash, key, content, opt = {}) {
+        if (typeof key === 'object') {
+            opt = content
+            content = key
+            for (const _key in content) {
+                try {
+                    content[_key] = JSON.stringify(content[_key])
+                } catch (err) {
+                    delete content[_key]
+                }
+            }
+            return new Promise((resolve) => {
+                this.engine(opt.db).hset(hash, content, (err, value) => {
+                    value ? resolve(true) : resolve(false)
+                })
             })
-        })
+        } else {
+            content = JSON.stringify(content)
+            return new Promise((resolve) => {
+                this.engine(opt.db).hset(hash, key, content, (err, value) => {
+                    value ? resolve(true) : resolve(false)
+                })
+            })
+        }
     }
     redis.hlen = function(hash, opt={}) {
         return new Promise((resolve) => {
@@ -245,7 +262,7 @@ module.exports = app => {
             })
         })
     }
-    redis.hdel = function(hash, key, opt={}) {
+    redis.hdel = function(hash, key, opt = {}) {
         return new Promise((resolve) => {
             this.engine(opt.db).hdel(hash, key, (err, value) => {
                 value ? resolve(true) : resolve(false)
