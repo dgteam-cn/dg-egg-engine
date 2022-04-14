@@ -3,7 +3,18 @@
   "version": "0.1.7",
   "author": "2681137811 <donguayx@qq.com>",
   "description": "A egg framework",
-  "keywords": ["dgteam", "web", "app", "http", "application", "framework", "koa", "middleware", "egg", "egg-framework"],
+  "keywords": [
+    "dgteam",
+    "web",
+    "app",
+    "http",
+    "application",
+    "framework",
+    "koa",
+    "middleware",
+    "egg",
+    "egg-framework"
+  ],
   "main": "index.js",
   "bin": {
     "dge": "bin/main",
@@ -11,7 +22,7 @@
   },
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
-    "@dgteam/helper": "^0.3.3",
+    "@dgteam/helper": "^0.3.4",
     "@dgteam/validator": "^0.1.0",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",
@@ -25,6 +36,12 @@
   },
   "devDependencies": {
     "@dgteam/eslint-config-team": "^0.1.1",
+    "@vuepress/core": "^2.0.0-beta.27",
+    "@vuepress/plugin-docsearch": "^2.0.0-beta.27",
+    "@vuepress/plugin-register-components": "^2.0.0-beta.27",
+    "@vuepress/plugin-search": "^2.0.0-beta.27",
+    "@vuepress/plugin-shiki": "^2.0.0-beta.27",
+    "@vuepress/utils": "^2.0.0-beta.27",
     "autod": "^3",
     "autod-egg": "^1",
     "babel-eslint": "^10.1.0",
@@ -32,12 +49,6 @@
     "egg-ci": "^1",
     "egg-mock": "^4",
     "eslint": "^6.6.0",
-    "@vuepress/core": "^2.0.0-beta.27",
-    "@vuepress/plugin-docsearch": "^2.0.0-beta.27",
-    "@vuepress/plugin-register-components": "^2.0.0-beta.27",
-    "@vuepress/plugin-search": "^2.0.0-beta.27",
-    "@vuepress/plugin-shiki": "^2.0.0-beta.27",
-    "@vuepress/utils": "^2.0.0-beta.27",
     "vue-eslint-parser": "^7.10.0",
     "vuepress-vite": "^2.0.0-beta.27"
   },
@@ -63,8 +74,20 @@
     "version": "12",
     "type": "github"
   },
-  "files": ["app", "config", "core", "lib", "plugin", "app.js", "agent.js", "index.js"],
-  "eslintIgnore": ["coverage", "dist"],
+  "files": [
+    "app",
+    "config",
+    "core",
+    "lib",
+    "plugin",
+    "app.js",
+    "agent.js",
+    "index.js"
+  ],
+  "eslintIgnore": [
+    "coverage",
+    "dist"
+  ],
   "homepage": "https://github.com/dgteam-cn/egg-engine",
   "repository": {
     "type": "git",

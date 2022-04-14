@@ -1,5 +1,5 @@
 const {
-    extend, origin,
+    extend, originJSON,
     big, price, priceUppercase, prefixZero, uuid,
     time, timestamp
 } = require('@dgteam/helper')
@@ -8,7 +8,7 @@ const {md5, base64, base64Decode, base64Encode, base64EncodeURI} = require('@dgt
 module.exports = {
 
     // 常用方法
-    extend, origin,
+    extend, originJSON,
 
     // 数学方法
     big, price, priceUppercase, prefixZero, uuid,

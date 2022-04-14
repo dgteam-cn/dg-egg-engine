@@ -1,9 +1,10 @@
 const Model = require('../../core/model.js')
 const _ = require('lodash')
+const helper = require('@dgteam/helper')
 const {
-    extend, origin, big, price, priceUppercase, prefixZero, uuid, time, timestamp,
+    extend, originJSON, big, price, priceUppercase, prefixZero, uuid, time, timestamp,
     isEmpty, isArray, isObject
-} = require('@dgteam/helper')
+} = helper
 const {md5, base64, base64Decode, base64Encode, base64EncodeURI} = require('@dgteam/helper/dist/hash.js')
 
 module.exports = {
@@ -13,9 +14,13 @@ module.exports = {
     $err: 0,
     $result: null,
 
-    extend, //origin, // origin 与 koa ctx 有冲突
+    extend, originJSON, //origin, // origin 与 koa ctx 有冲突
     big, price, priceUppercase, prefixZero, uuid, time, timestamp,
     isEmpty, isArray, isObject,
+    getProperty(obj, path) {
+        return helper.deepObjectMatch(obj, path)
+    },
+
     isFunction(obj) {
         return typeof obj === 'function'
     },
@@ -163,31 +168,5 @@ module.exports = {
     // },
 
 
-    enum(list = [], fun=new Function(), options) {
-        if (typeof options === 'string') {
-            options = {defLabel: options}
-        }
-        const config = Object.assign({name: 'name', label: ['label', 'title'], strict: false, defLabel: ''}, options)
-        let {name, label, defLabel} = config
-        // 枚举匹配判定函数
-        const handel = typeof fun !== 'function' ? item => {
-            return item[name] == fun
-        } : fun
-        for (const item of list) {
-            if (handel(item)) {
-                if (typeof label === 'string') {
-                    label = [label]
-                }
-                if (Array.isArray(label)) {
-                    for (let key of label) {
-                        if (item[key] !== undefined) {
-                            return item[key]
-                        }
-                    }
-                }
-                return item
-            }
-        }
-        return defLabel
-    }
+    enum: helper.enum
 }

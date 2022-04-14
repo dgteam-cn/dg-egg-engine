@@ -41,6 +41,7 @@ module.exports = {
             code.color(60, 60, 60, 255) // 字体颜色
             return Buffer.from(code.getBase64(), 'base64')
         },
+
         md5,
         base64
     }
