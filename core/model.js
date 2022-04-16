@@ -152,9 +152,42 @@ module.exports = class Model {
 
     _whereFactory(opt) {
         const {Op} = this.app.Sequelize
+        const OpMap = {
+            '=': Op.eq, '>': Op.gt, '>=': Op.gte, '<': Op.lt, '<=': Op.lte, '!=': Op.ne,
+            'EQ': Op.eq, 'GT': Op.gt, 'GTE': Op.gte, 'LT': Op.lt, 'LTE': Op.lte, 'NE': Op.ne,
+            'BETWEEN': Op.between, 'NOTBETWEEN': Op.between, 'IN': Op.in, 'NOTIN': Op.notIn, 'LIKE': Op.like, 'NOTLIKE': Op.notLike,
+            'AND': Op.and, 'OR': Op.or
+        }
+        // const obj = {}
         for (const key in opt) {
-            const type = typeof opt[key]
-            if (type === undefined) {
+            const originQuery = obj => {
+                if (obj && typeof obj === 'object') {
+                    if (Array.isArray(obj)) {
+                        obj.forEach(item => originQuery(item))
+                    } else {
+                        Object.keys(obj).forEach(key => {
+                            const item = obj[key]
+                            if (item === undefined) {
+                                delete obj[key]
+                                return false
+                            }
+                            if (item) {
+                                originQuery(item)
+                            }
+                            if (key[0] === '$') {
+                                const opKey = key.replace(/\$/g, '').toUpperCase()
+                                if (OpMap[opKey]) {
+                                    obj[OpMap[opKey]] = obj[key]
+                                    delete obj[key]
+                                }
+                            }
+                        })
+                    }
+                }
+                return obj
+            }
+
+            if (opt[key] === undefined) {
                 delete opt[key]
             } else if (isArray(opt[key])) {
                 let action = opt[key].shift()
@@ -162,11 +195,6 @@ module.exports = class Model {
                 // 20210429 -> 由于 null 属于有效字符（在 MYSQL 中有意义），而 js 中 null != undefined 会出现无法执行
                 if (typeof action === 'string' && (value || (value !== undefined || !Number.isNaN(value)))) {
                     action = action.toUpperCase()
-                    const OpMap = {
-                        '=': Op.and, '>': Op.gt, '>=': Op.gte, '<': Op.lt, '<=': Op.lte, '!=': Op.ne,
-                        'BETWEEN': Op.between, 'NOTBETWEEN': Op.between, 'IN': Op.in, 'NOTIN': Op.notIn, 'LIKE': Op.like, 'NOTLIKE': Op.notLike
-                    }
-
                     if (~['BETWEEN', 'NOTBETWEEN', 'IN', 'NOTIN'].indexOf(action)) {
                         if (typeof value === 'string') {
                             value = value.split(/\s*,\s*/)
@@ -181,8 +209,11 @@ module.exports = class Model {
                 } else {
                     delete opt[key]
                 }
+            } else if (opt[key] && typeof opt[key] === 'object') {
+                opt[key] = originQuery(opt[key]) // Sequelize 原生查询方式
             }
         }
+        console.log('_whereFactory res', opt)
         return opt
     }
     _error(message) {
@@ -220,13 +251,15 @@ module.exports = class Model {
 
     where(opt) {
         if (opt && typeof opt === 'object') {
-            this.options.where = Object.assign(this.options.where, removeUndefinedFromObject(opt)) // 2021-07-18 自动删除对象中 undefined 的字段
+            // this.options.where = Object.assign(this.options.where, removeUndefinedFromObject(opt)) // 2021-07-18 自动删除对象中 undefined 的字段
+            Object.assign(this.options.where, removeUndefinedFromObject(opt))
         }
         return this
     }
     scope(opt) {
         if (opt && typeof opt === 'object') {
-            this.options.scope = Object.assign(this.options.scope, opt)
+            // this.options.scope = Object.assign(this.options.scope, opt)
+            Object.assign(this.options.scope, opt)
         }
         return this
     }
