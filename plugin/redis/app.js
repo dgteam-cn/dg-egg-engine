@@ -17,9 +17,8 @@ module.exports = app => {
     const Config = Object.assign({}, app.config.redis)
 
     function redis(key, value, timeout, opt={}) {
-        if (!key) {
-            throw new Error('[redis]: key can not be blank')
-        }
+        if (!key) throw new Error('[redis]: key can not be blank')
+        if (typeof key === 'object') return redis.engine(key)
         if (typeof timeout === 'object') {
             opt = timeout
         } else if (opt && timeout && typeof opt === 'object' && !opt.timeout) {

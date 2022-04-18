@@ -213,7 +213,6 @@ module.exports = class Model {
                 opt[key] = originQuery(opt[key]) // Sequelize 原生查询方式
             }
         }
-        console.log('_whereFactory res', opt)
         return opt
     }
     _error(message) {

@@ -95,6 +95,24 @@ _Validator.rules.multiple = (value, {argName, validValue}) => {
     return true
 }
 
+// 多选
+_Validator.rules.checkbox = (value, {argName, validValue}) => {
+    if (!Array.isArray(value)) {
+        return {[argName]: 'Must be array'}
+    }
+    const opt = Object.assign({in: []}, Array.isArray(validValue) ? {in: validValue} : validValue)
+    const allowKeys = new Set(opt.in)
+    for (const item of value) {
+        if (!allowKeys.has(item)) {
+            return {[argName]: 'invalid value'}
+        }
+    }
+    if (new Set(value).size != value.length) {
+        return {[argName]: 'value is repeat'}
+    }
+    return true
+}
+
 module.exports = class Validator extends Service {
 
     // 测试自定义数据对象
