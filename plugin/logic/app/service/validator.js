@@ -17,7 +17,7 @@ const {big} = require('@dgteam/helper')
 
 // RESTful 指定过滤条件
 _Validator.rules.RESTful_filter = (value, {argName, validValue, ctx}) => {
-    if (value) {
+    if (value !== undefined) { // 需要考虑 ['', false, null, 0] 的情况
         const key = validValue && typeof validValue === 'string' ? validValue : argName
         if (ctx.RESTful && ctx.RESTful.query) {
             ctx.RESTful.query[key] = value
@@ -95,7 +95,8 @@ _Validator.rules.multiple = (value, {argName, validValue}) => {
     return true
 }
 
-// 多选
+// 多选检查（强制要求 value 为 array 类型）
+// 检查 value 的值是否在
 _Validator.rules.checkbox = (value, {argName, validValue}) => {
     if (!Array.isArray(value)) {
         return {[argName]: 'Must be array'}
