@@ -1,6 +1,6 @@
 {
   "name": "@dgteam/egg-engine",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "author": "2681137811 <donguayx@qq.com>",
   "description": "A egg framework",
   "keywords": [
@@ -23,7 +23,7 @@
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
     "@dgteam/helper": "^0.3.4",
-    "@dgteam/validator": "^0.1.0",
+    "@dgteam/validator": "^0.2.1",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",
     "egg": "^2",

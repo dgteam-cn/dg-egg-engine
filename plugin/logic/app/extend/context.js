@@ -1,4 +1,5 @@
 const helper = require('@dgteam/helper')
+const validator = require('../validator.js')
 
 const PARAM = Symbol('context-param')
 const POST = Symbol('context-post')
@@ -13,7 +14,7 @@ module.exports = {
     param(name, value) {
         if (!this[PARAM]) {
             // 合并 params 与 query 参数，params 参数有更高合并优先级
-            this[PARAM] = Object.assign({}, this.request._query || this.request.query, this.params )
+            this[PARAM] = Object.assign({}, this.request._query || this.request.query, this.params)
         }
         if (!name) return this[PARAM]
         if (helper.isObject(name)) {
@@ -75,6 +76,7 @@ module.exports = {
         return this
     },
 
+    validator,
 
     /**
      * 用户鉴权判定逻辑
@@ -84,7 +86,7 @@ module.exports = {
         // const ctx = this
         const {isEmpty, redis, identity} = ctx
 
-        let {authorization: token} = ctx.request.header
+        const {authorization: token} = ctx.request.header
 
         // 没有 token 但是又指定了身份
         if (!token && identity !== 'none') return {err: 401, msg: 'permission need token.'}

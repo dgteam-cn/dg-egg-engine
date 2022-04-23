@@ -4,8 +4,7 @@ module.exports = () => {
     return {
         logic: {
             validator: {
-                language: 'zh'
-                // msgs: {}
+                locale: 'zh'
             }
         }
     }
