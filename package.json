@@ -23,7 +23,7 @@
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
     "@dgteam/helper": "^0.3.4",
-    "@dgteam/validator": "^0.2.3",
+    "@dgteam/validator": "^0.2.4",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",
     "egg": "^2",

@@ -141,14 +141,14 @@ module.exports = class Logic {
                     }
 
                     // 补充必要参数
-                    if (attrs[name].allowNull === false && obj[name].required === undefined) {
-                        obj[name].required = true
+                    if (attrs[name].allowNull === false) {
+                        if (obj[name].required === undefined) {
+                            obj[name].required = true
+                        }
+                    } else if (obj[name].allowNull === undefined) {
+                        // obj[name].allowNull = true
                     }
-
                     // 判断是否允许默认值
-                    if (attrs[name].allowNull && obj[name].allowNull === undefined) {
-                        obj[name].allowNull = true
-                    }
 
                     if (attrs[name].type) {
                         let typeName = attrs[name].type.constructor.name
