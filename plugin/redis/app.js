@@ -16,7 +16,7 @@ module.exports = app => {
 
     const Config = Object.assign({}, app.config.redis)
 
-    function redis(key, value, timeout, opt={}) {
+    function redis(key, value, timeout, opt) {
         if (!key) throw new Error('[redis]: key can not be blank')
         if (typeof key === 'object') return redis.engine(key)
         if (typeof timeout === 'object') {
@@ -59,19 +59,27 @@ module.exports = app => {
 
     /**
      * 引擎实例，根据配置进行返回，若实例不存在则创建一个新实例
-     * @param {number} db - 数据库索引
+     * @param {Object} opt - 数据库配置（继承于 app.config.redis）
+     * @param {Number} opt.port - 端口
+     * @param {String} host - 主机 ip 地址
+     * @param {Number} opt.family - ip 地址类型 [4, 6]
+     * @param {String} password - 连接密码
+     * @param {Number} db - 连接数据库
      */
-    redis.engine = function(db = 0) {
-        let config = Object.assign(Config, {db})
-        let tunnel = md5(JSON.stringify(config))
+    redis.engine = function(opt = {db: 0}) {
+        if (typeof opt === 'string' || typeof opt === 'number') {
+            opt = {db: Number(opt)}
+        }
+        const config = Object.assign({}, Config, opt)
+        const tunnel = md5(JSON.stringify(config))
         if (!Pool[tunnel] || !Pool[tunnel].connector.connecting) {
             Pool[tunnel] = new Redis(config)
         }
         return Pool[tunnel]
     }
-    redis.get = function(key, opt={}) {
+    redis.get = function(key, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).get(key, (err, value) => {
+            this.engine(opt).get(key, (err, value) => {
                 if (value === null) resolve(void 0)
                 try {
                     resolve(JSON.parse(value))
@@ -81,80 +89,80 @@ module.exports = app => {
             })
         })
     }
-    redis.set = function(key, content, opt={}) {
+    redis.set = function(key, content, opt) {
         content = JSON.stringify(content)
         return new Promise(resolve => {
             if (opt && opt.timeout) {
-                this.engine(opt.db).setex(key, opt.timeout, content, (err, value) => {
+                this.engine(opt).setex(key, opt.timeout, content, (err, value) => {
                     value ? resolve(true) : resolve(false)
                 })
             } else {
-                this.engine(opt.db).set(key, content, (err, value) => {
+                this.engine(opt).set(key, content, (err, value) => {
                     value ? resolve(true) : resolve(false)
                 })
             }
         })
     }
-    redis.del = function(key, opt={}) {
+    redis.del = function(key, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).del(key, (err, value) => {
+            this.engine(opt).del(key, (err, value) => {
                 resolve(true)
             })
         })
     }
     // key 是否存在
-    redis.exists = function(key, opt={}) {
+    redis.exists = function(key, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).exists(key, (err, value) => {
+            this.engine(opt).exists(key, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.keys = function(keys, opt={}) {
+    redis.keys = function(keys, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).keys(keys, (err, value) => {
+            this.engine(opt).keys(keys, (err, value) => {
                 resolve(value)
             })
         })
     }
     // 获取缓存时间，单位秒
-    redis.ttl = function(key, opt={}) {
+    redis.ttl = function(key, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).ttl(key, (err, value) => {
+            this.engine(opt).ttl(key, (err, value) => {
                 resolve(value)
             })
         })
     }
     // 设置缓存时间，单位秒
-    redis.expire = function(key, timeout=0, opt={}) {
+    redis.expire = function(key, timeout=0, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).expire(key, timeout, (err, value) => {
+            this.engine(opt).expire(key, timeout, (err, value) => {
                 resolve(true)
             })
         })
     }
     // string 计数器
-    redis.incr = function(key, num=1, opt={}) {
+    redis.incr = function(key, num=1, opt) {
         if (typeof num === 'object') opt = num
         num = Number.isInteger(num) ? num : 1
         return new Promise(resolve => {
-            this.engine(opt.db).incrby(key, num, (err, value) => {
+            this.engine(opt).incrby(key, num, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.decr = function(key, num=1, opt={}) {
+    redis.decr = function(key, num=1, opt) {
         if (typeof num === 'object') opt = num
         num = Number.isInteger(num) ? num : 1
         return new Promise(resolve => {
-            this.engine(opt.db).decrby(key, num, (err, value) => {
+            this.engine(opt).decrby(key, num, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.hash = function(hash, key, opt={}) {
+    redis.hash = function(hash, key, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).hset(hash, key, (err, value) => {
+            this.engine(opt).hset(hash, key, (err, value) => {
                 resolve(value)
             })
         })
@@ -165,7 +173,7 @@ module.exports = app => {
     // hash 键值对  //
     // ------------ //
 
-    redis.hget = function(hash, key, opt={}) {
+    redis.hget = function(hash, key, opt) {
         if (key == undefined || typeof key === 'object') {
             if (typeof key === 'object' || key === undefined || key === null) {
                 if (typeof key === 'object') {
@@ -173,7 +181,7 @@ module.exports = app => {
                 }
             }
             return new Promise((resolve) => {
-                this.engine(opt.db).hgetall(hash, (err, value) => {
+                this.engine(opt).hgetall(hash, (err, value) => {
                     if (value) {
                         for (let k in value) {
                             try {
@@ -187,7 +195,7 @@ module.exports = app => {
             })
         }
         return new Promise((resolve) => {
-            this.engine(opt.db).hget(hash, key, (err, value) => {
+            this.engine(opt).hget(hash, key, (err, value) => {
                 if (value === null) resolve(void 0);
                 try {
                     resolve(JSON.parse(value))
@@ -198,9 +206,9 @@ module.exports = app => {
         })
     }
 
-    // redis.hgetall = function(hash, opt={}) {
+    // redis.hgetall = function(hash, opt) {
     //     return new Promise((resolve) => {
-    //         this.engine(opt.db).hgetall(hash, (err, value) => {
+    //         this.engine(opt).hgetall(hash, (err, value) => {
     //             if (value) {
     //                 for (let k in value) {
     //                     try {
@@ -214,7 +222,7 @@ module.exports = app => {
     //     })
     // }
 
-    redis.hset = function(hash, key, content, opt = {}) {
+    redis.hset = function(hash, key, content, opt) {
         if (typeof key === 'object') {
             opt = content
             content = key
@@ -226,44 +234,44 @@ module.exports = app => {
                 }
             }
             return new Promise((resolve) => {
-                this.engine(opt.db).hset(hash, content, (err, value) => {
+                this.engine(opt).hset(hash, content, (err, value) => {
                     value ? resolve(true) : resolve(false)
                 })
             })
         } else {
             content = JSON.stringify(content)
             return new Promise((resolve) => {
-                this.engine(opt.db).hset(hash, key, content, (err, value) => {
+                this.engine(opt).hset(hash, key, content, (err, value) => {
                     value ? resolve(true) : resolve(false)
                 })
             })
         }
     }
-    redis.hlen = function(hash, opt={}) {
+    redis.hlen = function(hash, opt) {
         return new Promise((resolve) => {
-            this.engine(opt.db).hlen(hash, (err, value) => {
+            this.engine(opt).hlen(hash, (err, value) => {
                 if (value === null) resolve(void 0)
                 resolve(value)
             })
         })
     }
-    redis.hincrby = function(hash, key, num, opt={}) {
+    redis.hincrby = function(hash, key, num, opt) {
         return new Promise((resolve) => {
-            this.engine(opt.db).hincrby(hash, key, num, (err, value) => {
+            this.engine(opt).hincrby(hash, key, num, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.hincrbyfloat = function(hash, key, num, opt={}) {
+    redis.hincrbyfloat = function(hash, key, num, opt) {
         return new Promise((resolve) => {
-            this.engine(opt.db).hincrbyfloat(hash, key, num, (err, value) => {
+            this.engine(opt).hincrbyfloat(hash, key, num, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.hdel = function(hash, key, opt = {}) {
+    redis.hdel = function(hash, key, opt) {
         return new Promise((resolve) => {
-            this.engine(opt.db).hdel(hash, key, (err, value) => {
+            this.engine(opt).hdel(hash, key, (err, value) => {
                 value ? resolve(true) : resolve(false)
             })
         })
@@ -273,17 +281,17 @@ module.exports = app => {
     // list 列表 //
     // --------- //
 
-    redis.push = function(list, content, opt={}) {
+    redis.push = function(list, content, opt) {
         content = JSON.stringify(content);
         return new Promise((resolve) => {
-            this.engine(opt.db).rpush(list, content, (err, value) => {
+            this.engine(opt).rpush(list, content, (err, value) => {
                 resolve(value)
             })
         })
     }
-    redis.lpop = function(list, content, opt={}) {
+    redis.lpop = function(list, content, opt) {
         return new Promise((resolve) => {
-            this.engine(opt.db).lpop(key, (err, value) => {
+            this.engine(opt).lpop(key, (err, value) => {
                 if (value === null) resolve(void 0)
                 try {
                     resolve(JSON.parse(value))
@@ -301,9 +309,9 @@ module.exports = app => {
      *   ["get", "foo"],
      * ]
      */
-    redis.pipeline = function(pipeline = [], opt = {}) {
+    redis.pipeline = function(pipeline = [], opt) {
         return new Promise(resolve => {
-            return this.engine(opt.db).pipeline(pipeline).exec((err, results) => {
+            return this.engine(opt).pipeline(pipeline).exec((err, results) => {
                 resolve(err ? false : results)
             })
         })
@@ -315,27 +323,27 @@ module.exports = app => {
     // --------- //
 
     // 增加一个地点到指定键值
-    redis.geoadd = function(key, longitude, latitude, name, opt={}) {
+    redis.geoadd = function(key, longitude, latitude, name, opt) {
         return new Promise(resolve => {
-            this.engine(opt.db).geoadd(key, longitude, latitude, name, (err, value) => {
+            this.engine(opt).geoadd(key, longitude, latitude, name, (err, value) => {
                 resolve(value)
             })
         })
     }
     // 计算键值内两个地点的距离
-    redis.geodist = function(key, member1, member2, unit='km', opt={}) {
+    redis.geodist = function(key, member1, member2, unit='km', opt) {
         // unit:  m米   km千米   mi英里   ft英尺。
         return new Promise(resolve => {
-            this.engine(opt.db).geodist(key, member1, member2, unit, (err, value) => {
+            this.engine(opt).geodist(key, member1, member2, unit, (err, value) => {
                 resolve(value)
             })
         })
     }
     // 列出一个范围内的所有位置
-    redis.georadius = function(key, longitude, latitude, radius, unit='km', opt={}) {
+    redis.georadius = function(key, longitude, latitude, radius, unit='km', opt) {
         // unit:  m米   km千米   mi英里   ft英尺。
         return new Promise(resolve => {
-            this.engine(opt.db).georadius(key, longitude, latitude, radius, unit, (err, value) => {
+            this.engine(opt).georadius(key, longitude, latitude, radius, unit, (err, value) => {
                 resolve(value)
             })
         })
@@ -343,29 +351,29 @@ module.exports = app => {
 
 
     // 订阅 / 广播
-    redis.subscribe = function(event, callback, opt={}) {
+    redis.subscribe = function(event, callback, opt) {
         if (typeof callback != "function") {
             callback = undefined
         }
-        return this.engine(opt.db).subscribe(event, callback)
+        return this.engine(opt).subscribe(event, callback)
     }
-    redis.psubscribe = function(event, callback, opt={}) {
+    redis.psubscribe = function(event, callback, opt) {
         if (typeof callback != "function") {
             callback = undefined
         }
-        return this.engine(opt.db).psubscribe(event, callback)
+        return this.engine(opt).psubscribe(event, callback)
     }
-    redis.on = function(event, callback, opt={}) {
+    redis.on = function(event, callback, opt) {
         if (typeof callback != "function") {
             callback = undefined
         }
-        return this.engine(opt.db).on(event, callback)
+        return this.engine(opt).on(event, callback)
     }
-    redis.publish = function(event, message, opt={}) {
+    redis.publish = function(event, message, opt) {
         if (typeof message != 'string') {
             message = JSON.stringify(message)
         }
-        return this.engine(opt.db).publish(event, message)
+        return this.engine(opt).publish(event, message)
     }
 
     app.redis = redis
