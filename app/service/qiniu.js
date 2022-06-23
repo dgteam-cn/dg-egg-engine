@@ -120,6 +120,7 @@ module.exports = class QiniuService extends Service {
         const bucketManager = new qiniu.rs.BucketManager(this.mac, this.config)
         return bucketManager.publicDownloadUrl(host, path)
     }
+    // 拼接图片（私有）令牌到路径
     privateToken(path, deadline=parseInt(Date.now() / 1000) + 3600, host = this.app.config.qiniu.domain_private) {
         const bucketManager = new qiniu.rs.BucketManager(this.mac, this.config)
         return bucketManager.privateDownloadUrl(host, path, deadline)
@@ -159,6 +160,8 @@ module.exports = class QiniuService extends Service {
 
     // }
 
+    // 获取对象的 Metadata 信息
+    // {fsize, hash, mimeType, ...}
     info(bucket, key) {
         return new Promise(resolve => {
             this.BucketManager.stat(bucket, key, (err, res) => {
@@ -208,38 +211,59 @@ module.exports = class QiniuService extends Service {
                 } else {
                     resolve({err: 502, msg: err.message})
                 }
+                setTimeout(() => resolve({err: 502, msg: 'timeout'}), 30000)
             })
         })
     }
-    // 剪切
-    move(bucket, key, dstbucket, deskey, force=true) {
+
+    /**
+     * 移动（剪切）对象
+     * @param {String} bucket - 源空间
+     * @param {String} key - 路径
+     * @param {String} dstbucket - 目标空间
+     * @param {String} deskey - 路径
+     * @param {Boolean} force - 冲突时是否强制覆盖
+     * @returns
+     */
+    move(bucket, key, dstbucket, deskey, force = false) {
         return new Promise(resolve => {
             this.BucketManager.move(bucket, key, dstbucket, deskey, {force}, (err, res, info) => {
                 if (!err) {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, msg: 'suc', result: res})
+                        resolve({err: 0, msg: 'ok', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
                 }
+                setTimeout(() => resolve({err: 502, msg: 'timeout'}), 30000)
             })
         })
     }
-    // 复制
-    copy(bucket, key, dstbucket, deskey) {
+
+    /**
+     * 复制对象
+     * @param {String} bucket - 源空间
+     * @param {String} key - 路径
+     * @param {String} dstbucket - 目标空间
+     * @param {String} deskey - 路径
+     * @param {Boolean} force - 冲突时是否强制覆盖
+     * @returns
+     */
+    copy(bucket, key, dstbucket, deskey, force = false) {
         return new Promise(resolve => {
             this.BucketManager.copy(bucket, key, dstbucket, deskey, {force: true}, (err, res, info) => {
                 if (!err) {
                     if (res && res.error) {
                         resolve({err: 403, msg: res.error})
                     } else {
-                        resolve({err: 0, msg: 'suc', result: res})
+                        resolve({err: 0, msg: 'ok', result: res})
                     }
                 } else {
                     resolve({err: 502, msg: err.message})
                 }
+                setTimeout(() => resolve({err: 502, msg: 'timeout'}), 30000)
             })
         })
     }

@@ -3,6 +3,7 @@
 const fs = require('fs')
 const helper = require('@dgteam/helper')
 const assert = require('assert')
+const {JSON5_PARSE} = require('../lib/exec')
 
 module.exports = class Document {
 
@@ -12,6 +13,7 @@ module.exports = class Document {
         this.app = app
         this.options = app.config.docs || {}
         this.directory = this.options.directory || {}
+        this.bodyFormat = ~['urlencoded', 'json'].indexOf(this.options.bodyFormat) ? this.options.bodyFormat : 'urlencoded'
 
         // 文档版本号
         this.name = app.name
@@ -31,10 +33,37 @@ module.exports = class Document {
                 name: `${this.name}_${this.version}`,
                 schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
             },
-            item: []
+            item: [],
+            event: [
+                {listen: "prerequest", script: {type: "text/javascript", exec: []}},
+                {listen: "test", script: {type: "text/javascript", exec: []}}
+            ],
+            variable: []  // {key: '', value: '', type: 'string'}
         }
         this.install()
         this.mergeDirectory()
+
+
+        // 插件部分
+        if (this.options.plugins) {
+            const {plugins} = this.options
+            // json5 解析插件
+            if (plugins.json5) {
+                const preRequestOpt = this.json.event.find(row => row.listen === 'prerequest')
+                if (preRequestOpt && preRequestOpt.script && Array.isArray(preRequestOpt.script.exec)) {
+                    preRequestOpt.script.exec.push(...JSON5_PARSE)
+                }
+            }
+        }
+        // 自定义全局变量
+        if (Array.isArray(this.options.variable)) {
+            this.options.variable.forEach(row => {
+                const {key, value, type} = row
+                if (typeof key === 'string' && key) {
+                    this.json.variable.push({key, value: typeof value === 'string' ? value : '', type: ~['string'].indexOf(type) ? type : 'string'})
+                }
+            })
+        }
     }
 
     // 初始化安装
@@ -56,8 +85,11 @@ module.exports = class Document {
                 // 当前需要遍历 action
                 const logic = this.app.logic[fullPath]
                 if (typeof logic === 'object' && logic.document !== false) {
-                    if (logic.RESTfull) {
-                        tunnel.item.push(...this.addApis('index', fullPath, logic.RESTfull))
+
+                    const RESTful = logic.RESTfull || logic.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
+
+                    if (RESTful) {
+                        tunnel.item.push(...this.addApis('index', fullPath, RESTful))
                     }
                     for (const action in router.format.controller[fullPath]) {
                         if (logic.actions) {
@@ -104,6 +136,7 @@ module.exports = class Document {
 
         const apis = []
         const host = ["{{BASE}}"]
+        const rowsMap = new Map()
         const formatParam = (api, checkup) => {
             // 填充注释
             for (const key in checkup) {
@@ -173,8 +206,52 @@ module.exports = class Document {
                     }
                     api.request.url.query.push(rowData)
                 } else {
-                    api.request.body.urlencoded.push({...rowData, type: 'text'})
+                    switch (this.bodyFormat) {
+                        case 'json': {
+                            rowsMap.set(rowData.key, rowData)
+                            break
+                        }
+                        case 'formdata': {
+                            api.request.body.formdata.push({...rowData, type: 'text'})
+                            break
+                        }
+                        case 'urlencoded':
+                        default: {
+                            api.request.body.urlencoded.push({...rowData, type: 'text'})
+                        }
+                    }
                 }
+            }
+            if (this.bodyFormat === 'json') {
+                api.request.body.mode = 'raw'
+                api.request.body.options = {raw: {language: "json"}}
+                if (rowsMap.size > 0) {
+                    const jsonRows = Array.from(rowsMap, ([key, row], index) => {
+                        let str = `"${row.key}": ${JSON.stringify(row.value)}`
+                        if (rowsMap.size > index + 1) {
+                            str += ','
+                        }
+                        if (this.options.plugins && this.options.plugins.json5) {
+                            if (row.value === '' || row.value === undefined) {
+                                str = '// ' + str
+                            }
+                            if (row.description) {
+                                str += ` // ${row.description}`
+                            }
+                        }
+                        return str
+                    })
+                    api.request.body.raw = `{\n    ${jsonRows.join('\n    ')}\n}`
+                    // if (api.request.method === 'POST' && api.request.url.raw === '{{BASE}}/business/cashbook') {
+                    //     console.log(api.request.body.raw)
+                    // }
+                    // "{\n    \"a\": 15\n}"
+                    // "{\n    \"a\": 15,\n    \"b\": false\n}",
+                    // "{\n    \"a\": 15, // no\n    \"b\": false,\n    \"c\": \"11\"\n}"
+                } else {
+                    api.request.body.raw = '{}'
+                }
+
             }
             return api
         }

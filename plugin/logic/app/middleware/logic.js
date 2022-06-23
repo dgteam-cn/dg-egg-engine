@@ -51,13 +51,15 @@ const checkPermission = (identity, ctx, logic) => {
     let param = {}
 
     if (action === 'index') {
-        let {RESTfull} = logic
-        if (!RESTfull) return {err: 404, msg: 'resource not found'}
-        if (!RESTfull[identity]) return {err: 402, msg: null}
-        if (!RESTfull[identity][METHOD]) return {err: 405, msg: null}
-        const checkupParams = extend(RESTfull[identity][METHOD])
 
-        // RESTfull 的 PUT 与 DELETE 方法必传主键
+        const RESTful = logic.RESTfull || logic.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
+
+        if (!RESTful) return {err: 404, msg: 'resource not found'}
+        if (!RESTful[identity]) return {err: 402, msg: null}
+        if (!RESTful[identity][METHOD]) return {err: 405, msg: null}
+        const checkupParams = extend(RESTful[identity][METHOD])
+
+        // RESTful 的 PUT 与 DELETE 方法必传主键
         if (METHOD === 'PUT' || METHOD === 'DELETE') {
             if (!result.id) return {err: 422, msg: 'primary key can not be blank.'}
         }
@@ -70,7 +72,7 @@ const checkPermission = (identity, ctx, logic) => {
             Object.keys(res.result).forEach(key => paramProxy(key, res.result[key]))
         }
 
-        // 剔除多余参数后，RESTfull 的 PUT 至少要提交一个参数
+        // 剔除多余参数后，RESTful 的 PUT 至少要提交一个参数
         if (METHOD === 'PUT' && isEmpty(param)) {
             return {err: 422, msg: 'restfull param is empty.'}
         }

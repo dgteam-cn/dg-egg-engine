@@ -16,7 +16,7 @@ module.exports = class PostController extends Controller {
     constructor(ctx) {
         super(ctx)
         this.options = {
-            RESTfull: {
+            RESTful: {
                 none: {
                     GET: {}
                 }
@@ -50,7 +50,7 @@ ALL /api/post/statis
 'use strict';
 const {Controller} = require('@dgteam/egg-engine')
 const options = {
-    RESTfull: {
+    RESTful: {
         admin: {
             GET: {}, // 为 admin 角色开放 GET 接口，角色鉴权相见 Logic 模块
             POST: {} // 为 admin 角色开放 POST 接口
@@ -118,7 +118,7 @@ module.exports = class PostController extends Controller {
     constructor(ctx) {
         super(ctx)
         this.options = {
-            RESTfull: {
+            RESTful: {
                 default: {
                     GET: {},
                     POST: {},
@@ -144,7 +144,7 @@ module.exports = class PostController extends Controller {
 }
 ```
 ## 用户鉴权 & 表单验证
-在默认的情况下，想要使用 RESTfull 配置快速输入接口，系统要求声明对应的 Logic 配置，否则会返回 405 错误
+在默认的情况下，想要使用 RESTful 配置快速输入接口，系统要求声明对应的 Logic 配置，否则会返回 405 错误
 Logic 的具体写法，请查看 Logic 章节
 
 ## 调用 Service
@@ -154,7 +154,7 @@ Service 的具体写法，请查看 Service 章节
 
 ## 设置响应体
 当业务逻辑完成之后，Controller 的最后一个职责就是将业务逻辑的处理结果通过 HTTP 响应发送给用户。
-RESTfull API 会自动设置响应体，
+RESTful API 会自动设置响应体，
 ### 普通设置
 ```
 class PostController extends Controller {

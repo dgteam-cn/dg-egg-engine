@@ -27,7 +27,7 @@ if (typeof BigInt !== 'undefined') {
 module.exports = class Logic {
 
     title = 'Logic'
-    RESTfull = {}
+    RESTful = {}
     actions = {}
     variableRange = {
         MySQL: MySQLVariableRange

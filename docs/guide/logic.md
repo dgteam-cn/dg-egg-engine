@@ -7,7 +7,7 @@ module.exports = class extends Logic {
     constructor(app, options) {
         super(app, options)
         this.title = '客户'
-        this.RESTfull = {
+        this.RESTful = {
             admin: {
                 GET: this.mixin([Query, Logic.defaultQuery]),
                 // POST: this.mixin([{}, Check]),

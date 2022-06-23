@@ -7,7 +7,7 @@ const Model = require('./model.js')
 // 默认配置
 const opt_default = {
     model: null,
-    RESTfull: {
+    RESTful: {
         GET: null, POST: null, PUT: null, DELETE: null, count: null, // 增删改查的默认配置
         // own: false, // 查询我自己的行，返回为查询所用的筛选条件
         // inspect: false, // 是否允许导出逻辑文件
@@ -17,7 +17,7 @@ const opt_default = {
     export: false // 可否导出
 }
 
-class RESTfullController extends Controller {
+class RESTfulController extends Controller {
 
     constructor(ctx) {
         super(ctx);
@@ -31,7 +31,7 @@ class RESTfullController extends Controller {
     table = (name) => this.model(name || this.options.model)
     model = (name) => {
         if (!name) {
-            name = this.storePath.name
+            name = this.tablePath
         }
         return new Model(name, this.app, this.ctx)
     }
@@ -43,15 +43,22 @@ class RESTfullController extends Controller {
         // const identitys = this.app.config.project.identitys
         // const topLevel = [...identitys, 'default', 'none']
         const identity = this.ctx.identity
-        const {RESTfull} = this.options
-        if (RESTfull && RESTfull[identity]) {
-            return RESTfull[identity]
+
+        const RESTful = this.options.RESTfull || this.options.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
+
+        if (RESTful && RESTful[identity]) {
+            return RESTful[identity]
         }
-        return opt_default.RESTfull
+        return opt_default.RESTful
     }
 
-    // 获取控制器标识符
+    // 2022-06-06 标记即将废弃
     get storePath() {
+        return {name: this.tablePath}
+    }
+
+    // 获取控制器默认表路径
+    get tablePath() {
         let path = this.fullPath
         let start = path.indexOf('controller') + 'controller/'.length
         let end =  path.indexOf('.js')
@@ -59,14 +66,15 @@ class RESTfullController extends Controller {
         if (paths.length && paths[paths.length-1] === 'index') {
             paths.splice(paths.length - 1, 1)
         }
-        return {name: paths.join('/')}
+        return paths.join('/')
     }
 
     async index() {
 
-        const {ctx, app} = this
-        const {helper, RESTful, identity, method, api} = ctx
-        const {action} = api
+        const {ctx} = this
+        // const {helper, RESTful} = ctx
+        const {identity, method, api} = ctx
+        // const {action} = api
         // const isDev = app.config.env !== 'prod'
 
         // 身份判断
@@ -83,7 +91,7 @@ class RESTfullController extends Controller {
             const LockFun = this.opt[method].lock ? this.opt[method].lock : this.opt.lock
             let LockName = typeof LockFun === 'function' ? await LockFun(this.ctx.RESTful, this.ctx) : LockFun
             if (!LockName || typeof LockName !== 'string') {
-                LockName = this.options.model ? this.options.model : this.storePath
+                LockName = this.options.model ? this.options.model : this.tablePath
             }
             ctx.RedisLock = await ctx.redis.lock(LockName, 150000)
             if (!ctx.RedisLock) return ctx.err(503)
@@ -220,7 +228,7 @@ class RESTfullController extends Controller {
                     }
                     marker.sort = 'DESC'
                 }
-                console.log(modelHandler)
+                // console.log(modelHandler)
                 // console.log('\n is DESC:', !!DESCObj, Array.from(modelHandler.options.order), marker, '\n', query, '\n')
             }
 
@@ -334,9 +342,9 @@ class RESTfullController extends Controller {
     //     const {controllerPath} = api
     //     if (opt.inspect && app.logic[controllerPath]) {
     //         const logic = app.logic[controllerPath]
-    //         const result = {restfull: {}, actions: {}}
-    //         if (logic.RESTfull && logic.RESTfull[identity]) {
-    //             result.restfull = logic.RESTfull[identity]
+    //         const result = {restful: {}, actions: {}}
+    //         if (logic.RESTful && logic.RESTful[identity]) {
+    //             result.restful = logic.RESTful[identity]
     //         }
     //         if (typeof logic.actions === 'object') {
     //             for (const name in logic.actions) {
@@ -358,6 +366,6 @@ class RESTfullController extends Controller {
     // }
 }
 
-Egg.RESTfullController = RESTfullController
+Egg.RESTfulController = RESTfulController
 
-module.exports = RESTfullController
+module.exports = RESTfulController

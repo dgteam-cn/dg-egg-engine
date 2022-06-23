@@ -69,7 +69,7 @@ const TableConfig = {
 ### FetchConfig
 + 在执行 $store.dispatch('FETCH') 和 RESTful 方法的配置   
 + 在 [uni.request](https://uniapp.dcloud.io/api/request/request) 中需要开启 uniRequestAdapter = true 或手动封装转译   
-+ 在 RESTfull 方法调用时候，某些参数会被覆盖   
++ 在 RESTful 方法调用时候，某些参数会被覆盖   
 ```javascript
 const TableConfig = {
   id: '', // {Number|String} 执行 GET PUT DELETE 单行数据时，需要传入数据主键
