@@ -1,15 +1,23 @@
 
+
     自定义主键规则
     自定义次级主键规则（sn）
-    由于 _ 会导致某些冲突，所有路由、路径等都不应用蛇形命名法
-        - 应给予框架级别的提示
     优化 model 实例操作时的时间格式
-    logic validator 新增配置增加新规则或动态增减规则
     [优化] model.order 新增函数支持
     [优化] 新增 ctx.RESTful.options 对象，可以临时覆盖控制器默认 options
     
-!0.1.8
+0.1.11
+    [修复] ctx.redis(key, value, timeout) 中 timeout 传参不生效的问题
 
+0.1.10
+    [调整] 标记弃用 core/controller this.storePath，使用 this.tablePath 替代
+    [优化] plugin/docs 新增 json5 解析器插件
+    [修复] 修复部分 RESTful 字段命名错误，并预留兼容函数
+
+0.1.9
+    [修复] 浮点数自动注入规则错误的bug
+    [修复] 字符串类型 length 无法指定固定值的错误
+    [废弃] 废弃 logic.ApplyCheck 方法
 
 0.1.7
     [修复] @dgteam/validator 非 string 的空字符串，应当以 undefined 处理
@@ -27,10 +35,6 @@
         - 如果在 BeforePUT、BeforeDELETE 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
     [优化] 优化在 marker 中，除了 id 外增加 created_at 兼容性
     [优化] 在 model 中强化 order 的排序
-
-0.1.6
-    [] logic 支持 config 配置参数
-    // logic 支持动态配置语言
 
 0.1.5
     [修复] 在 package.json 漏配置 files 导致发布时文件缺失的问题

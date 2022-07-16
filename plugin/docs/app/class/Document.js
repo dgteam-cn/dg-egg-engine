@@ -263,7 +263,8 @@ module.exports = class Document {
                     method = method.toUpperCase()
                     const header = [
                         {key: "Authorization", value: "{{TOKEN}}", description: '授权令牌', type: "text"},
-                        {key: "Identity", value: identity, description: `请求身份 ${identity}`,  type: "text"}
+                        {key: "Identity", value: identity, description: `请求身份 ${identity}`,  type: "text"},
+                        {key: "Accept-Language", value: "{{LOCALE}}", description: `语言`,  type: "text"}
                     ]
                     const createApi = pathId => {
                         return helper.origin({

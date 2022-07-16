@@ -44,6 +44,7 @@ class RESTfulController extends Controller {
         // const topLevel = [...identitys, 'default', 'none']
         const identity = this.ctx.identity
 
+        if (this.options.RESTfull) console.warn('[controller] Did you try "RESTful" and spell it "RESTfull"')
         const RESTful = this.options.RESTfull || this.options.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
 
         if (RESTful && RESTful[identity]) {

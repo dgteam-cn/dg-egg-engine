@@ -45,13 +45,14 @@ const checkPermission = (identity, ctx, logic) => {
 
     const validator = ctx.service.validator
     const {action, params} = ctx.api
-    let result = {
+    const result = {
         id: params && params.id ? params.id : undefined
     }
     let param = {}
 
     if (action === 'index') {
 
+        if (logic.RESTfull) console.warn('[logic] Did you try "RESTful" and spell it "RESTfull"')
         const RESTful = logic.RESTfull || logic.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
 
         if (!RESTful) return {err: 404, msg: 'resource not found'}
