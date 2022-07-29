@@ -82,7 +82,6 @@ module.exports = class Model {
             field: new Set(),
             fieldInclude: new Set(),
             fieldReverse: new Set(),
-            scope: {},
             include: [],
             limit: undefined,
             offset: undefined,
@@ -234,10 +233,16 @@ module.exports = class Model {
         // 2021-06-04 改为支持 Set 格式
         const options = Array.isArray(opt) || opt instanceof Set ? opt : arguments
         for (let row of options) {
+            // if (row instanceof Model) {
+            //     row = row.client
+            // } else if (row.model && row.model instanceof Model) {
+            //     row.model = row.model.client
+            // }
+            const {scope} = row // 2022-07-17 改为支持 scope 格式
             if (row instanceof Model) {
-                row = row.client
+                row = scope ? row.client.scope(scope) : row.client
             } else if (row.model && row.model instanceof Model) {
-                row.model = row.model.client
+                row.model = scope ? row.model.client.scope(scope) : row.model.client
             }
             if (row.where) {
                 row.where = this._whereFactory(row.where)
@@ -255,10 +260,16 @@ module.exports = class Model {
         }
         return this
     }
-    scope(opt) {
-        if (opt && typeof opt === 'object') {
-            // this.options.scope = Object.assign(this.options.scope, opt)
-            Object.assign(this.options.scope, opt)
+    scope(opt, ...args) {
+        // if (opt && typeof opt === 'object') {
+        //     // this.options.scope = Object.assign(this.options.scope, opt)
+        //     Object.assign(this.options.scope, opt)
+        // }
+        // 2022-07-17 修改为支持 scope
+        if (Array.isArray(opt)) {
+            this.client = this.client.scope(...opt)
+        } else {
+            this.client = this.client.scope(opt, ...args)
         }
         return this
     }

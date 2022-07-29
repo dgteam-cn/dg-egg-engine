@@ -12,6 +12,7 @@ const opt_default = {
         // own: false, // 查询我自己的行，返回为查询所用的筛选条件
         // inspect: false, // 是否允许导出逻辑文件
         limit: async () => null, // 操作限制，返回为查询或修改将要被锁定的参数
+        scope: async () => null, // 作用域限制
         lock: async () => null //  行锁，默认使用 redis 分布式锁，返回为资源名称
     },
     export: false // 可否导出
@@ -145,12 +146,16 @@ class RESTfulController extends Controller {
 
         const {ctx} = this
 
-        const index = this.RESTfulIndex('GET')
-        let limit = await this.RESTfulLimit('GET')
+        // const index = this.RESTfulIndex('GET')
+        // let limit = await this.RESTfulLimit('GET')
 
-        if (ctx.RESTful.limit) {
-            limit = {...limit, ...this.ctx.RESTful.limit}
-        }
+        // if (ctx.RESTful.limit) {
+        //     limit = {...limit, ...this.ctx.RESTful.limit}
+        // }
+
+        const index = await this.getRESTfulOpt('GET', 'index')
+        const limit = Object.assign({}, await this.getRESTfulOpt('GET', 'limit'), this.ctx.RESTful.limit)
+        const scope = await this.getRESTfulOpt('GET', 'scope')
 
         // field、fieldInclude、fieldReverse、include 四项特殊的 limit 参数专属于 GET 方法，使用内部 getGEToptions 方法获取
         const getGEToptions = async key => {
@@ -173,7 +178,7 @@ class RESTfulController extends Controller {
 
         const model = this.table(this.options.model)
         if (index) {
-            const item = await model.where(Object.assign({}, limit, index)).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include).find()
+            const item = await model.scope(scope).where(Object.assign({}, limit, index)).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include).find()
             if (ctx.isEmpty(item)) {
                 ctx.err(404)
             } else {
@@ -186,7 +191,7 @@ class RESTfulController extends Controller {
             const {page, size} = param
 
             // TODO 2021-07-22 marker 查询可以省略一次 count 检索提升效率
-            const modelHandler = model.where(Object.assign({}, query, limit)).order(order).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include)
+            const modelHandler = model.scope(scope).where(Object.assign({}, query, limit)).order(order).field(field).fieldInclude(fieldInclude).fieldReverse(fieldReverse).include(include)
 
             /**
              * marker 方式
@@ -242,22 +247,26 @@ class RESTfulController extends Controller {
 
     POST = async (param = this.ctx.RESTful.param) => {
         const {ctx} = this
-        const limit = await this.RESTfulLimit('POST')
+        // const limit = await this.RESTfulLimit('POST')
+        const limit = await this.getRESTfulOpt('POST', 'limit')
+        const scope = await this.getRESTfulOpt('POST', 'scope')
         const data = Object.assign({}, param, limit)
-        const row = await this.table(this.options.model).add(data)
+        const row = await this.table(this.options.model).scope(scope).add(data)
         row && row.id ? ctx.suc(row) : ctx.err(500)
     }
 
-    PUT = async (param = this.ctx.RESTful.param, index = this.RESTfulIndex('PUT', true)) => {
+    PUT = async (param = this.ctx.RESTful.param) => {
         const {ctx} = this
-        const limit = await this.RESTfulLimit('PUT')
+        const index = await this.getRESTfulOpt('PUT', 'index')
+        const limit = await this.getRESTfulOpt('PUT', 'limit')
+        const scope = await this.getRESTfulOpt('PUT', 'scope')
         if (index) {
             const accurate = Boolean(this.opt.PUT && this.opt.PUT.accurate) // 是否为精确修改
             if (accurate) {
                 // 如果在 BeforePUT 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
                 const row = ctx.RESTful.row && typeof ctx.RESTful.row.update === 'function' ?
                     ctx.RESTful.row :
-                    await this.table(this.options.model).where(Object.assign({}, limit, index)).find()
+                    await this.table(this.options.model).scope(scope).where(Object.assign({}, limit, index)).find()
                 if (!ctx.isEmpty(row)) {
                     ctx.RESTful.beforeRowUpdate = row.toJSON()
                     await row.update(param)
@@ -266,7 +275,7 @@ class RESTfulController extends Controller {
                     ctx.err(404)
                 }
             } else {
-                const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).update(param)
+                const result = await this.table(this.options.model).scope(scope).where(Object.assign({}, limit, index)).update(param)
                 Array.isArray(result) && result[0] ? ctx.suc(Object.assign(param, index)) : ctx.err(404)
             }
         } else {
@@ -276,8 +285,11 @@ class RESTfulController extends Controller {
 
     DELETE = async () => {
         const {ctx} = this
-        const index = this.RESTfulIndex('DELETE', true)
-        const limit = await this.RESTfulLimit('DELETE')
+        // const index = this.RESTfulIndex('DELETE', true)
+        // const limit = await this.RESTfulLimit('DELETE')
+        const index = await this.getRESTfulOpt('DELETE', 'index')
+        const limit = await this.getRESTfulOpt('DELETE', 'limit')
+        const scope = await this.getRESTfulOpt('DELETE', 'scope')
         const force = Boolean(this.opt.DELETE && this.opt.DELETE.force) // 是否为物理删除
         const accurate = Boolean(this.opt.DELETE && this.opt.DELETE.accurate) // 是否为精确修改
         if (index) {
@@ -285,7 +297,7 @@ class RESTfulController extends Controller {
                 // 如果在 BeforePUT 中获取并赋值给 ctx.RESTful.row 那么优先获取该对象
                 const row = ctx.RESTful.row && typeof ctx.RESTful.row.destroy === 'function' ?
                     ctx.RESTful.row :
-                    await this.table(this.options.model).where(Object.assign({}, limit, index)).find()
+                    await this.table(this.options.model).scope(scope).where(Object.assign({}, limit, index)).find()
                 if (!ctx.isEmpty(row)) { // destroy
                     ctx.RESTful.beforeRowDelete = row.toJSON()
                     await row.destroy({force})
@@ -294,26 +306,49 @@ class RESTfulController extends Controller {
                     ctx.err(404)
                 }
             } else {
-                const result = await this.table(this.options.model).where(Object.assign({}, limit, index)).delete({force})
+                const result = await this.table(this.options.model).scope(scope).where(Object.assign({}, limit, index)).delete({force})
                 result ? ctx.suc(index) : ctx.err(404)
             }
         }
     }
 
-    // 查询索引
-    RESTfulIndex = () => this.ctx.RESTful.id ? {id: this.ctx.RESTful.id} : null
+    // // 查询索引
+    // RESTfulIndex = () => this.ctx.RESTful.id ? {id: this.ctx.RESTful.id} : null
+
+    // // 查询限制
+    // RESTfulLimit = async method => {
+    //     if (method && this.opt[method] && this.opt[method].limit) {
+    //         return this.ctx.isFunction(this.opt[method].limit) ?
+    //             await this.opt[method].limit(this.ctx.RESTful, this.ctx) : this.opt[method].limit
+    //     } else if (this.opt.limit) {
+    //         return this.ctx.isFunction(this.opt.limit) ?
+    //             await this.opt.limit(this.ctx.RESTful, this.ctx) : this.opt.limit
+    //     } else if (this.ctx.RESTful.limit) {
+    //         return this.ctx.isFunction(this.ctx.RESTful.limit) ?
+    //             await this.ctx.RESTful.limit(this.ctx.RESTful, this.ctx) : this.ctx.RESTful.limit
+    //     }
+    //     return null
+    // }
 
     // 查询限制
-    RESTfulLimit = async method => {
-        if (method && this.opt[method] && this.opt[method].limit) {
-            return this.ctx.isFunction(this.opt[method].limit) ?
-                await this.opt[method].limit(this.ctx.RESTful, this.ctx) : this.opt[method].limit
-        } else if (this.opt.limit) {
-            return this.ctx.isFunction(this.opt.limit) ?
-                await this.opt.limit(this.ctx.RESTful, this.ctx) : this.opt.limit
-        } else if (this.ctx.RESTful.limit) {
-            return this.ctx.isFunction(this.ctx.RESTful.limit) ?
-                await this.ctx.RESTful.limit(this.ctx.RESTful, this.ctx) : this.ctx.RESTful.limit
+    // 2022-07-17 兼容 RESTfulIndex RESTfulLimit RESTfulLimit RESTfulScope
+    getRESTfulOpt = async (method, key) => {
+        switch (key) {
+            case 'index': {
+                return this.ctx.RESTful.id ? {id: this.ctx.RESTful.id} : null
+            }
+            default: {
+                if (method && this.opt[method] && this.opt[method][key] !== undefined) {
+                    return this.ctx.isFunction(this.opt[method][key]) ?
+                        await this.opt[method][key](this.ctx.RESTful, this.ctx) : this.opt[method][key]
+                } else if (this.opt[key] !== undefined) {
+                    return this.ctx.isFunction(this.opt[key]) ?
+                        await this.opt[key](this.ctx.RESTful, this.ctx) : this.opt[key]
+                } else if (this.ctx.RESTful[key] !== undefined) {
+                    return this.ctx.isFunction(this.ctx.RESTful[key]) ?
+                        await this.ctx.RESTful[key](this.ctx.RESTful, this.ctx) : this.ctx.RESTful[key]
+                }
+            }
         }
         return null
     }

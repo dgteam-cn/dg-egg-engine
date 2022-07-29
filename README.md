@@ -1,10 +1,14 @@
 
-
+    模型文件中，先声明关联再创建模型会报错
     自定义主键规则
     自定义次级主键规则（sn）
     优化 model 实例操作时的时间格式
     [优化] model.order 新增函数支持
     [优化] 新增 ctx.RESTful.options 对象，可以临时覆盖控制器默认 options
+    
+0.1.12
+    [优化] 内置 model 支持了 sequelize scope 的方法，在配置中通过 options.scopes 声明，在实例中通过 table.scope('name') 使用
+    [修复] 在 controller RESTful 配置中，里层的 null 无法覆盖外层 value 的问题
     
 0.1.11
     [修复] ctx.redis(key, value, timeout) 中 timeout 传参不生效的问题

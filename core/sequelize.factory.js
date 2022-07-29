@@ -5,12 +5,9 @@ module.exports = class {
     constructor({app, paths, attrs, options, relation}) {
         /**
          * @name options
-         * @param {string} modelName - 模型名，在sequelize.models属性中会使用这个名称；如果没有在options中指定表名，数据库中也会使用此属性做为表名
-         * @param {string} attributes - 一个对象，其每个属性对应表中的一个列，每个列可以使用一个预定义的DataType、字符串或类型描述对象定义
-         * @param modelName {string}
-         * @param modelName {string}
-         * @param modelName {string}
-         * @param validate {object} 验证器，用于表单验证，详见 validator.js 第三方模块文档
+         * @param {String} modelName - 模型名，在sequelize.models属性中会使用这个名称；如果没有在options中指定表名，数据库中也会使用此属性做为表名
+         * @param {String} attributes - 一个对象，其每个属性对应表中的一个列，每个列可以使用一个预定义的DataType、字符串或类型描述对象定义
+         * @param {Object} validate {object} 验证器，用于表单验证，详见 validator.js 第三方模块文档
         */
         this.app = app
         while (paths.length > 1 && paths[paths.length - 1] === 'index') {
