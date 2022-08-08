@@ -26,6 +26,7 @@
     "@dgteam/validator": "^0.2.4",
     "axios": "^0.21.1",
     "captchapng": "^0.0.1",
+    "debug": "^4.3.4",
     "egg": "^2",
     "egg-sequelize": "^6.0.0",
     "ioredis": "^4.27.3",

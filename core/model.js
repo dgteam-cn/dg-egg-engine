@@ -430,6 +430,11 @@ module.exports = class Model {
         const {where, paranoid} = this._formatOption()
         return this.client.findOrCreate({where, paranoid, defaults: item}) // 此方式会自动创建事务，而 findCreateFind 方式不会
     }
+    findAdd(item, check = {}) {
+        this.where(check)
+        const {where, paranoid} = this._formatOption()
+        return this.client.findCreateFind({where, paranoid, defaults: item})
+    }
     addMany(list) {
         return this.client.bulkCreate(list) // 批量增加
     }

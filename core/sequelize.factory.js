@@ -1,4 +1,5 @@
 // const os = require('os')
+const debug = require('debug')('[sequelize.factory]')
 
 module.exports = class {
 
@@ -142,16 +143,19 @@ module.exports = class {
 
                     const Self = deepSearcher(this.app.model, JSON.parse(JSON.stringify(this.paths))) // 自己
                     const Target = deepSearcher(this.app.model, model.split('/')) // 关联目标
-                    if (!Target) throw new Error(`模型关联无效路径: ${this.paths.join('/')}`)
-                    if (constraints === undefined) constraints = false
 
-                    // foreignKey  targetKey  onDelete: 'RESTRICT'  onUpdate: 'RESTRICT'
-                    const typeAction = relationType[type] ? relationType[type] : type
-                    // console.log(this.app.model)
-                    if (Self) {
-                        Self[typeAction](Target, {foreignKey, targetKey, sourceKey, as, constraints}) // as: `$${model.split('_')}`
+                    if (Target) {
+                        if (constraints === undefined) constraints = false
+                        // foreignKey  targetKey  onDelete: 'RESTRICT'  onUpdate: 'RESTRICT'
+                        const typeAction = relationType[type] ? relationType[type] : type
+                        // console.log(this.app.model)
+                        if (Self) {
+                            Self[typeAction](Target, {foreignKey, targetKey, sourceKey, as, constraints}) // as: `$${model.split('_')}`
+                        } else {
+                            throw new Error('can not found model')
+                        }
                     } else {
-                        throw new Error('can not found model')
+                        debug(`模型关联无效路径: ${this.paths.join('/')}`)
                     }
                 }
             }

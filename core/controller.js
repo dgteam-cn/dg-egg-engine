@@ -158,16 +158,22 @@ class RESTfulController extends Controller {
         const scope = await this.getRESTfulOpt('GET', 'scope')
 
         // field、fieldInclude、fieldReverse、include 四项特殊的 limit 参数专属于 GET 方法，使用内部 getGEToptions 方法获取
-        const getGEToptions = async key => {
-            const type = index ? 'item' : 'list'
-            const options = this.opt.GET
-            const valid = options[type] && options[type][key] ? options[type][key] : options[key]
-            return typeof valid === 'function' ? await valid(ctx.RESTful, ctx) : valid // 2021-07-20 [新增] 支持回掉函数
-        }
-        const field = await getGEToptions('field')
-        const fieldInclude = await getGEToptions('fieldInclude') || [] // 2021-07-20 [新增] 增加 fieldInclude 字段，此用于增加虚拟函数所产生的字段
-        const fieldReverse = await getGEToptions('fieldReverse') || [] // 2021-07-20 [修复]  ['deleted_at'] => [] 默认就已经剔除了软删除数据，无需额外排除此字段
-        const include = await getGEToptions('include') || []
+        // const getGEToptions = async key => {
+        //     const type = index ? 'item' : 'list'
+        //     const options = this.opt.GET
+        //     const valid = options[type] && options[type][key] ? options[type][key] : options[key]
+        //     return typeof valid === 'function' ? await valid(ctx.RESTful, ctx) : valid // 2021-07-20 [新增] 支持回掉函数
+        // }
+        // const field = await getGEToptions('field')
+        // const fieldInclude = await getGEToptions('fieldInclude') || [] // 2021-07-20 [新增] 增加 fieldInclude 字段，此用于增加虚拟函数所产生的字段
+        // const fieldReverse = await getGEToptions('fieldReverse') || [] // 2021-07-20 [修复]  ['deleted_at'] => [] 默认就已经剔除了软删除数据，无需额外排除此字段
+        // const include = await getGEToptions('include') || []
+        const field = await this.getRESTfulOpt('GET', 'field') // 2022-08-07 [优化] 使用 getRESTfulOpt 方法替换 getGEToptions 方法
+        const fieldInclude = await this.getRESTfulOpt('GET', 'fieldInclude') || []
+        const fieldReverse = await this.getRESTfulOpt('GET', 'fieldReverse') || []
+        const include = await this.getRESTfulOpt('GET', 'include') || []
+
+        // console.log('\n', {scope, field, fieldInclude, fieldReverse})
 
         // 2021-08-29 修复 ctx.RESTful.include 参数仅在 list 中生效，而 item 不生效的问题
         if (ctx.RESTful.include) {
@@ -338,7 +344,11 @@ class RESTfulController extends Controller {
                 return this.ctx.RESTful.id ? {id: this.ctx.RESTful.id} : null
             }
             default: {
-                if (method && this.opt[method] && this.opt[method][key] !== undefined) {
+                const act = this.ctx.RESTful.id ? 'item' : 'list'
+                if (method === 'GET' && this.opt.GET && this.opt.GET[act] && this.opt.GET[act][key] !== undefined) {
+                    return this.ctx.isFunction(this.opt.GET[act][key]) ?
+                        await this.opt.GET[act][key](this.ctx.RESTful, this.ctx) : this.opt.GET[act][key]
+                } else if (method && this.opt[method] && this.opt[method][key] !== undefined) {
                     return this.ctx.isFunction(this.opt[method][key]) ?
                         await this.opt[method][key](this.ctx.RESTful, this.ctx) : this.opt[method][key]
                 } else if (this.opt[key] !== undefined) {
