@@ -45,7 +45,7 @@ class RESTfulController extends Controller {
         // const topLevel = [...identitys, 'default', 'none']
         const identity = this.ctx.identity
 
-        if (this.options.RESTfull) console.warn('[controller] Did you try "RESTful" and spell it "RESTfull"')
+        if (this.options.RESTfull) this.ctx.logger.warn('[controller] Did you try "RESTful" and spell it "RESTfull"')
         const RESTful = this.options.RESTfull || this.options.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
 
         if (RESTful && RESTful[identity]) {
@@ -374,7 +374,7 @@ class RESTfulController extends Controller {
     //             const row = await this.table().where(filter).find()
     //             ctx.isEmpty(row) ? ctx.err(404) : ctx.suc(row)
     //         } else {
-    //             console.error(`'opt.own' must be function or object.`)
+    //             app.logger.error(`'opt.own' must be function or object.`)
     //         }
     //     }
     // }

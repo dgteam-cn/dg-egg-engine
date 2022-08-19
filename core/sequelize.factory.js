@@ -25,7 +25,7 @@ module.exports = class {
         // 自动创建 ID 主键字段
         this.attrs = Object.assign({
             id: {
-                type: app.Sequelize.INTEGER(10).UNSIGNED,
+                type: app.Sequelize.BIGINT().UNSIGNED,
                 autoIncrement: true,
                 comment: '主键',
                 primaryKey: true

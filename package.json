@@ -1,6 +1,6 @@
 {
   "name": "@dgteam/egg-engine",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "author": "2681137811 <donguayx@qq.com>",
   "description": "A egg framework",
   "keywords": [
@@ -25,6 +25,7 @@
     "@dgteam/helper": "^0.3.4",
     "@dgteam/validator": "^0.2.4",
     "axios": "^0.21.1",
+    "bull": "^4.8.5",
     "captchapng": "^0.0.1",
     "debug": "^4.3.4",
     "egg": "^2",

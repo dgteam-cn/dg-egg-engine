@@ -34,6 +34,17 @@ module.exports = {
         "    })",
         "} else {",
         "    serializeJSON5()",
-        "}"
+        "}",
+        "// 20220819 解决新版在 :id 为空时，原样数据导致接口解析错误的问题",
+        "pm.request.url.path.forEach((path, index) => {",
+        "    if (path && path[0] === ':') {",
+        "        const key = path.slice(1)",
+        "        const variable = pm.request.url.variables.find(row => row.key === key)",
+        "        if (variable && variable.value == '') {",
+        "            pm.request.url.path[index] = ''",
+        "        }",
+        "    }",
+        "})"
     ]
 }
+

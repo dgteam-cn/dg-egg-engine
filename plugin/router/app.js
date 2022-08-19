@@ -134,7 +134,7 @@ module.exports = app => {
         router.format = format
 
         if (router.format.repeats && router.format.repeats.length > 0) {
-            console.error('\n', '[egg-dg-router] \n 部分控制器与方法有重名的风险，请检查:', ...router.format.repeats, '\n')
+            app.logger.error('\n', '[egg-dg-router] \n 部分控制器与方法有重名的风险，请检查:', ...router.format.repeats, '\n')
         }
 
         // console.log('\n', router.format, '\n')

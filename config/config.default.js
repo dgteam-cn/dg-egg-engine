@@ -75,8 +75,8 @@ module.exports = appInfo => {
         },
 
         logger: {
-            level: 'NONE' // 关闭日志打印
-            // consoleLevel: 'NONE',
+            level: 'WARN', // 文件输出日志级别 | NONE = 关闭; DEBUG < INFO < WARN < ERROR
+            consoleLevel: 'INFO' // 终端输出日志, 格式同上
         }
     }
 }

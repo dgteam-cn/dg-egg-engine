@@ -301,6 +301,9 @@ module.exports = class Model {
         this.options.page = {current, size}
         return this
     }
+    attrs(opt) {
+        return this.field(opt)
+    }
     field(opt) {
         if (opt) {
             if (typeof opt === 'string') opt = opt.split(/\s*,\s*/)
@@ -435,8 +438,8 @@ module.exports = class Model {
         const {where, paranoid} = this._formatOption()
         return this.client.findCreateFind({where, paranoid, defaults: item})
     }
-    addMany(list) {
-        return this.client.bulkCreate(list) // 批量增加
+    addMany(records, options) {
+        return this.client.bulkCreate(records, options) // 批量增加
     }
 
 

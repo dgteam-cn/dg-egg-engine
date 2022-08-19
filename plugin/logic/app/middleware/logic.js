@@ -52,7 +52,7 @@ const checkPermission = (identity, ctx, logic) => {
 
     if (action === 'index') {
 
-        if (logic.RESTfull) console.warn('[logic] Did you try "RESTful" and spell it "RESTfull"')
+        if (logic.RESTfull) ctx.logger.warn('[logic] Did you try "RESTful" and spell it "RESTfull"')
         const RESTful = logic.RESTfull || logic.RESTful // TODO 兼容旧版本 RESTful 字段命名错误 BUG
 
         if (!RESTful) return {err: 404, msg: 'resource not found'}
@@ -108,7 +108,7 @@ const checkPermission = (identity, ctx, logic) => {
                 return {err: 402, msg: null}
             }
         } else if (examiner.identity) {
-            console.error('[logic] "identity" need to "identitys"') // 字段输入错误
+            ctx.logger.error('[logic] "identity" need to "identitys"') // 字段输入错误
         }
 
         // 3、表单验证
@@ -181,7 +181,6 @@ module.exports = options => {
                     }
                     return {id, page, size, order}
                 } catch (err) {
-                    // console.error(err)
                     return defaultData
                 }
             }
