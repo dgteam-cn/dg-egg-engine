@@ -1,3 +1,7 @@
+0.1.13
+    [修复] core/logic 在不指定 integer length 时，自动设置 min & max 值错误的问题
+    [移除] 移除 app.log ctx.log helper.log 方法
+    [决定] 逐步废弃 app.tools 对象
     
 0.1.12
     [优化] 恢复开启默认日志打印

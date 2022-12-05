@@ -10,11 +10,9 @@ module.exports = {
     table(name) {
         return new Model(name, this) // 获取数据模型
     },
+
+    // TODO 2022-11-14 逐步废弃 app.tools 对象
     tools: {
-        log(...obj) {
-            // eslint-disable-next-line no-console
-            console.log('\n', ...obj, '\n')
-        },
         randomInt(number) {
             return (Math.random() + '').substring(2, 2+number)
         },

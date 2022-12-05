@@ -342,7 +342,7 @@ module.exports = class Document {
     }
 
     // 导出到本地
-    exportJSON(exportPath=this.app.baseDir) {
+    exportJSON(exportPath = this.app.baseDir) {
 
         // 多版本模式
         // const path = `${exportPath}/app/public/documentation/${this.app.config.pkg.version}`

@@ -37,9 +37,10 @@ function install(config, app) {
      */
     redis.lock = function(resource = 'redlock', ttl = 10000) {
         if (!Pool[REDLOCK]) {
+            const db = config.redlock && config.redlock.db || 8
             Pool[REDLOCK] = new Redlock(
                 [Redis.createClient(
-                    Object.assign({}, config, {db: 4})
+                    Object.assign({}, config, {db})
                 )],
                 Object.assign({
                     driftFactor: 0.01, // 预期的时钟漂移，会与 ttl 相乘
@@ -306,7 +307,7 @@ function install(config, app) {
     /**
      * redis.pipeline
      * pipeline = [
-     *  ["set", "foo", "bar"],
+     *   ["set", "foo", "bar"],
      *   ["get", "foo"],
      * ]
      */

@@ -17,10 +17,5 @@ module.exports = {
     time, timestamp,
 
     // 哈希算法
-    md5, base64, base64Decode, base64Encode, base64EncodeURI,
-
-    log(...msg) {
-        // eslint-disable-next-line no-console
-        console.log('\n', ...msg, '\n')
-    }
+    md5, base64, base64Decode, base64Encode, base64EncodeURI
 }

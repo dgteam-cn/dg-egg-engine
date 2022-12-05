@@ -1,6 +1,7 @@
 /**
  * @description:
  * @author: bubao
+ * @link https://gitee.com/yitter/idgenerator/tree/master
  */
 class Genid {
     /**

@@ -1,4 +1,5 @@
 const {isEmpty, isArray, isObject} = require('@dgteam/helper')
+// const isIterator = obj => typeof obj === 'object' && typeof obj[Symbol.iterator] === 'function'
 // const {base64Decode} = require('@dgteam/helper/dist/hash')
 
 function trimStr(str) {
@@ -228,7 +229,7 @@ module.exports = class Model {
      * @param {Object}               [opt.association] - 临时关联配置，用于没有事先关联或需要改变原来的模型关系(注意该关系数据全局)
      * @param {Object}               [opt.include] - 还能继续在 include 其他关系，但是深层对象需要自己提取 sequelize model 对象
      */
-    include(opt) {
+    include(opt = []) {
 
         // 2021-06-04 改为支持 Set 格式
         const options = Array.isArray(opt) || opt instanceof Set ? opt : arguments
@@ -386,8 +387,8 @@ module.exports = class Model {
         //     const {count, rows: items} = res
         //     return new Items(items, {count, size: limit, page: Math.ceil(offset / limit) + 1})
         // })
+        // =============== ⬆️  2021-07-22 由于 include 的结果也会计入 findAndCountAll 中的 count, 因此部分重写
 
-        // 2021-07-22 由于 include 的结果也会计入 findAndCountAll 中的 count, 因此该接口废弃
         const {limit, offset} = this._formatOption()
         const count = await this.count()
         const items = await this.select()
@@ -439,6 +440,10 @@ module.exports = class Model {
         return this.client.findCreateFind({where, paranoid, defaults: item})
     }
     addMany(records, options) {
+        // options.updateOnDuplicate 是使用 "on duplicate key update" 语句实现:
+        //    - 存储引擎下使用的是表锁，性能不好。
+        //    - 下并发事务情况下可能会存在锁表/死锁问题。
+        //    - 应尽量避免在多唯一索引的情况下使用此语句。
         return this.client.bulkCreate(records, options) // 批量增加
     }
 
@@ -469,7 +474,7 @@ module.exports = class Model {
         // 如果是 item 实例，可以直接 item.increment({ [key]: number })
         return this.client.update(update, {where, paranoid})
     }
-    decrement(key, number=1) {
+    decrement(key, number = 1) {
         const update = {}
         if (typeof key === 'string') {
             update[key] = this.app.Sequelize.literal(`\`${key}\` -${number}`)

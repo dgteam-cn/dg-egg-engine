@@ -17,7 +17,7 @@ const MySQLVariableRange = {
     }
 }
 if (typeof BigInt !== 'undefined') {
-    // node10+以上有原生的 BigInt 可以支持大型整数，支持判断对比，支持 Big.js
+    // TODO node10+以上有原生的 BigInt 可以支持大型整数，支持判断对比，支持 Big.js
     // 需要 dg-validator 支持
     // MySQLVariableRange.integer.BIGINT.min = -9223372036854775808n
     // MySQLVariableRange.integer.BIGINT.max = 9223372036854775807n
@@ -117,6 +117,8 @@ module.exports = class Logic {
             }
         }
 
+        const isExistValue = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
+
         // 模型参数合并
         if (this.table && this.table.rawAttributes) {
 
@@ -136,7 +138,7 @@ module.exports = class Logic {
                     }
 
                     // 补充默认值
-                    if (attrs[name].defaultValue && obj[name].default === undefined) {
+                    if (attrs[name].defaultValue && isExistValue(obj[name], 'default')) {
                         obj[name].default = attrs[name].defaultValue
                     }
 
@@ -165,14 +167,17 @@ module.exports = class Logic {
                                 // 整数
                                 case 'TINYINT': case 'SMALLINT': case 'MEDIUMINT': case 'INTEGER': case 'BIGINT': {
                                     const {unsigned} = typeOptions
-
                                     if (obj[name].int === undefined) {
                                         obj[name].int = {}
                                     } else if (typeof obj[name].int === 'number') {
                                         obj[name].int = {max: obj[name].int}
                                     }
                                     if (obj[name].int.max === undefined) {
-                                        obj[name].int.max = Math.pow(10, typeOptions.length) - 1
+                                        if (typeOptions.length) {
+                                            obj[name].int.max = Math.pow(10, typeOptions.length) - 1
+                                        } else {
+                                            obj[name].int.max = MySQLVariableRange.integer[typeName].max
+                                        }
                                         // 最大值不能超过限制
                                         const compare = unsigned ? MySQLVariableRange.integer[typeName].unsigned : MySQLVariableRange.integer[typeName].max
                                         if (obj[name].int.max > compare) obj[name].int.max = compare
@@ -180,8 +185,10 @@ module.exports = class Logic {
                                     if (obj[name].int.min === undefined) {
                                         if (unsigned) {
                                             obj[name].int.min = 0
-                                        } else {
+                                        } else if (typeOptions.length) {
                                             obj[name].int.min = -(Math.pow(10, typeOptions.length) - 1)
+                                        } else {
+                                            obj[name].int.min = MySQLVariableRange.integer[typeName].min
                                         }
                                         // 最小值不能超过限制
                                         const compare = unsigned ? 0 : MySQLVariableRange.integer[typeName].min
